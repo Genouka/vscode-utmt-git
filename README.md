@@ -22,3 +22,11 @@
 - `vscode-utmt-git.dataWinPath`：默认 data.win 文件路径（相对于项目根目录）
 - `vscode-utmt-git.autoExportOnSave`：保存 GML 文件时自动导出资产
 - `vscode-utmt-git.autoImportBeforeRun`：执行操作前自动导入所有资产
+
+## 许可证
+
+本项目以 MPL2.0 发布。
+
+本项目提供了`UndertaleModCli`的构建脚本，但不包含其源码，需要自行拉取构建。
+
+本项目使用[UndertaleModTool-git-loader](https://github.com/i-winxd/UndertaleModTool-git-loader)的源码。
