@@ -1,0 +1,473 @@
+{
+    "name": "UTMT GML",
+    "scopeName": "source.utmt-gml",
+    "patterns": [
+        { "include": "#comments" },
+        { "include": "#jsdoc" },
+        { "include": "#preprocessor" },
+        { "include": "#keywords" },
+        { "include": "#constants" },
+        { "include": "#builtin-functions" },
+        { "include": "#numbers" },
+        { "include": "#strings" },
+        { "include": "#operators" },
+        { "include": "#accessors" },
+        { "include": "#identifiers" }
+    ],
+    "repository": {
+        "comments": {
+            "patterns": [
+                {
+                    "name": "comment.block.gml",
+                    "begin": "/\\*",
+                    "end": "\\*/",
+                    "captures": {
+                        "0": { "name": "punctuation.definition.comment.gml" }
+                    }
+                },
+                {
+                    "name": "comment.line.double-slash.gml",
+                    "match": "//.*$",
+                    "captures": {
+                        "0": { "name": "punctuation.definition.comment.gml" }
+                    }
+                }
+            ]
+        },
+        "jsdoc": {
+            "patterns": [
+                {
+                    "name": "comment.block.documentation.gml",
+                    "match": "(///|\\*)\\s*(@(?:description|desc|deprecated|ignore|pure|mixin))\\b.*$\\n?",
+                    "captures": {
+                        "1": { "name": "punctuation.definition.comment.gml" },
+                        "2": { "name": "storage.type.class.gml" }
+                    }
+                },
+                {
+                    "name": "comment.block.documentation.gml",
+                    "begin": "(///|\\*)\\s*(@(?:self|context))\\s+([^\\s]+)",
+                    "end": "$",
+                    "beginCaptures": {
+                        "1": { "name": "punctuation.definition.comment.gml" },
+                        "2": { "name": "storage.type.class.gml" },
+                        "3": { "name": "entity.name.type.instance.gml" }
+                    }
+                },
+                {
+                    "name": "comment.block.documentation.gml",
+                    "begin": "(///|\\*)\\s*(@(?:returns?|type))\\b(?:\\s*(?:(\\{)\\s*([^}]+)\\s*(\\})))?",
+                    "end": "$",
+                    "beginCaptures": {
+                        "1": { "name": "punctuation.definition.comment.gml" },
+                        "2": { "name": "storage.type.class.gml" },
+                        "3": { "name": "punctuation.definition.bracket.curly.begin.gml" },
+                        "4": { "name": "entity.name.type.instance.gml" },
+                        "5": { "name": "punctuation.definition.bracket.curly.end.gml" }
+                    }
+                },
+                {
+                    "name": "comment.block.documentation.gml",
+                    "begin": "(///|\\*)\\s*(@(?:param|arg|argument|parameter|localvar|var|globalvar|prop|property|instancevar|template))\\b(?:\\s*(?:(\\{)\\s*([^}]+)\\s*(\\})))?(?:\\s*(?:(\\[)?\\s*([_$[:alpha:]][_$[:alnum:]]*)\\s*(\\])?))?",
+                    "end": "$",
+                    "beginCaptures": {
+                        "1": { "name": "punctuation.definition.comment.gml" },
+                        "2": { "name": "storage.type.class.gml" },
+                        "3": { "name": "punctuation.definition.bracket.curly.begin.gml" },
+                        "4": { "name": "entity.name.type.instance.gml" },
+                        "5": { "name": "punctuation.definition.bracket.curly.end.gml" },
+                        "6": { "name": "punctuation.definition.optional-value.begin.bracket.square.gml" },
+                        "7": { "name": "variable.other.gml" },
+                        "8": { "name": "punctuation.definition.optional-value.end.bracket.square.gml" }
+                    }
+                }
+            ]
+        },
+        "preprocessor": {
+            "patterns": [
+                {
+                    "name": "meta.preprocessor.gml",
+                    "match": "^\\s*(#define|#event|#region|#endregion|#macro|#section|#attachment|#notification)\\b",
+                    "captures": {
+                        "1": { "name": "keyword.control.preprocessor.gml" }
+                    }
+                }
+            ]
+        },
+        "keywords": {
+            "patterns": [
+                {
+                    "name": "keyword.control.gml",
+                    "match": "\\b(if|else|while|for|repeat|do|until|with|break|continue|return|exit|switch|case|default|try|catch|finally|throw)\\b"
+                },
+                {
+                    "name": "keyword.declaration.gml",
+                    "match": "\\b(var|globalvar|enum|function|constructor|static|new|delete|typeof)\\b"
+                },
+                {
+                    "name": "keyword.operator.logical.gml",
+                    "match": "\\b(and|or|xor|not|div|mod)\\b"
+                },
+                {
+                    "name": "constant.language.gml",
+                    "match": "\\b(true|false|noone|self|other|all|global|local|undefined|pointer_invalid|pointer_null|null|NaN|infinity|pi)\\b"
+                }
+            ]
+        },
+        "constants": {
+            "patterns": [
+                {
+                    "name": "constant.numeric.gml",
+                    "match": "\\b(vk_(left|right|up|down|enter|return|shift|control|alt|escape|space|backspace|tab|clear|pause|print|execute|snapshot|insert|delete|home|end|pageup|pagedown|f1|f2|f3|f4|f5|f6|f7|f8|f9|f10|f11|f12|numpad0|numpad1|numpad2|numpad3|numpad4|numpad5|numpad6|numpad7|numpad8|numpad9|multiply|divide|add|subtract|decimal|lshift|rshift|lcontrol|rcontrol|lalt|ralt|any))\\b"
+                },
+                {
+                    "name": "constant.numeric.gml",
+                    "match": "\\b(mb_(left|right|middle|any|none|side1|side2))\\b"
+                },
+                {
+                    "name": "constant.language.gml",
+                    "match": "\\b(ev_(create|destroy|step|alarm|keyboard|mouse|collision|other|draw|keypress|keyrelease|trigger|gesture|async|user0|user1|user2|user3|user4|user5|user6|user7|user8|user9|user10|user11|user12|user13|user14|user15|clean|pre_create|end|boundary|start|step_start|step_end|step_normal|gui|resize|animation_update|animation_event))\\b"
+                },
+                {
+                    "name": "constant.numeric.gml",
+                    "match": "\\b(c_(aqua|black|blue|dkgray|fuchsia|gray|green|lime|ltgray|maroon|navy|olive|purple|red|silver|teal|white|yellow|orange))\\b"
+                },
+                {
+                    "name": "constant.numeric.gml",
+                    "match": "\\b(fa_(left|center|right|top|middle|bottom))\\b"
+                },
+                {
+                    "name": "constant.numeric.gml",
+                    "match": "\\b(pr_(pointlist|linelist|linestrip|trianglelist|trianglestrip|trianglefan))\\b"
+                },
+                {
+                    "name": "constant.numeric.gml",
+                    "match": "\\b(bm_(complex|normal|add|max|subtract|zero|one|src_colour|inv_src_colour|src_alpha|inv_src_alpha|dest_alpha|inv_dest_alpha|dest_colour|inv_dest_colour|src_alpha_sat))\\b"
+                },
+                {
+                    "name": "constant.numeric.gml",
+                    "match": "\\b(tp_(precise|imprecise|none))\\b"
+                },
+                {
+                    "name": "constant.numeric.gml",
+                    "match": "\\b(os_(win32|windows|macosx|linux|android|ios|win8native|win8|wp8|tizen|ps3|ps4|psvita|xboxone|switch|unknown|browser))\\b"
+                }
+            ]
+        },
+        "builtin-functions": {
+            "patterns": [
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(instance_(create|destroy|copy|exists|find|number|nearest|furthest|place|position|change|deactivate|activate|fetch|get|set|is|id))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(object_(exists|get_name|get_parent|get_depth|get_mask|get_sprite|is_ancestor|set_mask|set_sprite|get_solid|get_visible|get_persistent|set_solid|set_visible|set_persistent))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(draw_(sprite|sprite_ext|sprite_stretched|sprite_stretched_ext|sprite_general|sprite_part|sprite_part_ext|sprite_tiled|sprite_tiled_ext|background|background_ext|background_tiled|background_tiled_ext|background_part|background_part_ext|background_general|text|text_ext|text_transformed|text_ext_transformed|text_colour|text_ext_colour|point|line|line_width|rectangle|rectangle_colour|roundrect|roundrect_colour|triangle|ellipse|ellipse_colour|circle|circle_colour|set_circle_precision|path|healthbar|gradient|alpha_test|set_alpha|get_alpha|clear|set_font|set_halign|set_valign|set_colour|get_colour|button|menu|slider|toggle|gui))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(audio_(play_sound|play_sound_on|stop_sound|resume_sound|pause_sound|is_playing|sound_length|sound_pitch|sound_gain|sound_type|group_set|group_stop|group_resume|group_is_playing|group_name|emitter_create|emitter_free|emitter_exists|emitter_pitch|emitter_gain|emitter_position|emitter_falloff|emitter_velocity|listener_position|listener_orientation|listener_velocity|create_buffer|free_buffer|queue_buffer|get_type))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(sprite_(exists|add|create_from_surface|add_from_surface|delete|assign|duplicate|merge|replace|create|set_offset|set_alpha_from_sprite|collision|get_name|get_number|get_width|get_height|get_xoffset|get_yoffset|get_bbox_bottom|get_bbox_left|get_bbox_right|get_bbox_top|get_texture|get_uvs|set_cache_size|set_cache_size_ext|flush|save))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(room_(goto|goto_next|goto_previous|restart|add|assign|duplicate|instance_add|instance_clear|instance_count|instance_find|set_background|set_background_colour|set_background_alpha|set_background_blend|set_background_scale|set_background_visible|set_background_vspeed|set_background_hspeed|set_background_x|set_background_y|set_height|set_width|set_view|set_viewport|get_viewport|set_camera|get_camera))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(view_(set|get|wport|hport|wview|hview|xport|yport|xview|yview|visible|surface_id|object|mouse_x|mouse_y))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(string|real|int64|chr|ord|show_message|show_question|show_debug_message|show_debug_overlay|get_string|get_integer|get_integer_async|get_string_async|show_message_async|show_question_async|filename_name|filename_path|filename_dir|filename_drive|filename_ext|filename_change_ext|file_text_open_read|file_text_open_write|file_text_open_append|file_text_close|file_text_read_string|file_text_read_real|file_text_readln|file_text_write_string|file_text_write_real|file_text_writeln|file_text_eoln|file_text_eof|directory_create|directory_exists|file_exists|file_delete|file_rename|file_copy|file_find_first|file_find_next|file_find_close|ini_open|ini_close|ini_read_string|ini_read_real|ini_write_string|ini_write_real|ini_key_exists|ini_section_exists|ini_open_from_string|json_encode|json_decode|json_stringify|json_parse)\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(ds_(map|list|stack|queue|priority|grid)_(create|destroy|clear|copy|size|empty|add|insert|replace|delete|find|exists|read|write|mark_as_(map|list)|is_(map|list)|sort|shuffle|secure|first|last|previous|next|value))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(array_(create|length|length_1d|length_2d|height_2d|push|pop|insert|delete|sort|copy|concat|filter|reduce|map|any|all|contains|index_of|last_index_of|reverse|shuffle|first|last|get|set|foreach))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(keyboard_(check|check_pressed|check_released|check_direct|clear|set_map|get_map|set_numlock|get_numlock|key_press|key_release|get_string))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(mouse_(check_button|check_button_pressed|check_button_released|wheel_up|wheel_down|x|y|clear|wait))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(abs|ceil|floor|round|frac|sqrt|sqr|power|sign|sin|cos|tan|arcsin|arccos|arctan|arctan2|exp|ln|log2|log10|logn|min|max|mean|median|clamp|lerp|random|random_range|irandom|irandom_range|random_set_seed|random_get_seed|randomize|choose|probability|point_distance|point_direction|lengthdir_x|lengthdir_y|dot_product|dot_product_3d|dot_product_normalised|angle_difference|d3d|matrix_get|matrix_set|matrix_build|matrix_multiply|matrix_transform_vertex)\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(surface_(create|free|exists|get_width|get_height|getpixel|set_target|reset_target|copy|save))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(texture_(set_stage|set_blend|get_texel_width|get_texel_height|get_uvs|global_scale|set_border|set_repeat|is_ready))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(shader_(is_compiled|set|reset|set_uniform|set_uniform_f|set_uniform_f_array|set_uniform_i|set_uniform_i_array|set_uniform_matrix|set_uniform_matrix_array|get_name|get_uniform|get_texture|current|enable_corner_id))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(buffer_(create|destroy|copy|read|write|fill|seek|tell|get_type|get_size|get_alignment|resize|load|save|base64_encode|base64_decode|md5|sha1|sha256|hmac_sha1|hmac_sha256|crypt|get_surface|set_surface|sizeof))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(network_(create_socket|create_socket_ext|create_server|connect|send|send_raw|send_packet|send_udp|send_udp_raw|set_config|resolve|destroy|listen|has_error|set_timeout))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(http_(request|get|get_file|post_string|post))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(game_(save|load|end|restart|display_name|project_name|get_speed|set_speed|change|save_id|pad|pad_count|pad_axis|pad_button|pad_button_count|pad_button_value|pad_connected|pad_disable|pad_is_connected|pad_remove|pad_set_vibration|pad_set_colour|pad_screenshot))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(event_(perform|perform_object|user|inherited))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(script_(execute|exists|get_name))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(asset_(exists|get_index|get_type|get_name))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(layer_(create|destroy|exists|get_id|get_name|get_all|get_depth|set_depth|get_element_type|element_(add|move|exists|get_id|get_name|get_ids|destroy)|x|y|sprite_(create|destroy|change|get|set|x|y|scale|speed|index)|background_(create|destroy|change|get|set|x|y|htiled|vtiled|stretch|scale|blend|alpha|visible)|instance_(create|destroy|get|get_all)|tile_(create|destroy|get|set|map|region)|target|force_(create|destroy|exists|type|apply|x|y|fx|fy|radius|strength|interior|apply|type)|particle_(create|destroy|system|emitter|type|type_(sprite|shape|size|orientation|colour|alpha|blend|life|speed|direction|gravity|secondary))))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(part_(system_(create|destroy|update|draw|drawit|clear|position|automatic|oldtonew|depth|sleep)|emitter_(create|destroy|clear|region|burst|stream)|type_(create|destroy|exists|clear|shape|sprite|size|speed|direction|orientation|colour|alpha|blend|life|gravity|secondary|death|step)))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(os_(get_info|get_language|get_region|get_timezone|get_config|check_permission|request_permission|is_network_connected|get_browser|get_device|get_version|type))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(window_(get_caption|set_caption|get_cursor|set_cursor|get_colour|set_colour|set_colour|get_fullscreen|set_fullscreen|get_visible|set_visible|set_rectangle|set_position|set_size|center|default|get_x|get_y|get_width|get_height|get_mouse_rect|set_mouse_rect|has_input_focus|has_focus|device_mouse))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(display_(get_width|get_height|get_orientation|get_dpi_x|get_dpi_y|reset|set_gui_size|set_gui_maximise|set_ui_visibility|set_sleep_margin))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(application_get_position|application_surface_draw_enable|application_surface_enable|application_surface_is_enabled)\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(debug_(event|get_callstack))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(exception_(handle|unhandled_handler))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(call_(method|script))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(method|typeof|is_(undefined|string|real|array|int64|ptr|vec2|vec3|vec4|matrix|method|script|struct|instance|object|sprite|tile|tilemap|room|font|path|timeline|shader|sequence|particle|asset))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(struct_(get|set|get_names|get_keys|get_values))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(sequence_(create|exists|get|get_ids|destroy))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(camera_(create|destroy|apply|update|get_view_mat|get_proj_mat|set_view_mat|set_proj_mat|set_view_size|get_view_size|set_view_target|get_view_target|get_view_x|get_view_y|set_view_pos|get_view_angle|set_view_angle))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(skeleton_(animation_(set|get|get_frame|set_frame|get_duration|get_name|get_names|is_loop|clear|mix|set_mix|get_mix)|bone_(state|position|rotation|scale|length|data|collision|point|dir)|get_(num_bounds|bounds|num_surfaces|surface|texture|bbox|name)|set|is_(drawn|updating)|attachment_(set|get|create|delete|set_collision|get_collision)|skin_(set|get)))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(gpu_(set|get|set_blendenable|set_zwriteenable|set_ztestenable|set_fog|set_cullmode|get_cullmode|set_blendmode|set_blendmode_ext|get_blendmode|get_blendmode_ext|set_blendmode_ext_sepalpha|set_colourwriteenable|set_stencil_enable|set_stencil_mask|set_stencil_test|set_stencil_op|set_stencil_ref|get_stencil_ref|set_texfilter|get_texfilter|set_texfilter_ext|get_texfilter_ext|set_texrepeat|get_texrepeat|set_texrepeat_ext|get_texrepeat_ext))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(clipboard_(has_text|get_text|set_text))\\b"
+                },
+                {
+                    "name": "support.function.gml",
+                    "match": "\\b(date_(current_datetime|current_date|current_time|get_year|get_month|get_day|get_hour|get_minute|get_second|get_weekday|inc_year|inc_month|inc_day|inc_hour|inc_minute|inc_second|datetime_string|date_string|time_string|is_leap_year|days_in_month|days_in_year|get_second_from_time|get_minute_from_time|get_hour_from_time|get_day_from_time|get_month_from_time|get_year_from_time|compare_datetime|get_timezone))\\b"
+                }
+            ]
+        },
+        "numbers": {
+            "patterns": [
+                {
+                    "name": "constant.numeric.hex.gml",
+                    "match": "\\b(\\$[0-9a-fA-F]+)\\b"
+                },
+                {
+                    "name": "constant.numeric.float.gml",
+                    "match": "\\b([0-9]+\\.[0-9]+([eE][+-]?[0-9]+)?)\\b"
+                },
+                {
+                    "name": "constant.numeric.integer.gml",
+                    "match": "\\b([0-9]+([eE][+-]?[0-9]+)?)\\b"
+                }
+            ]
+        },
+        "strings": {
+            "patterns": [
+                {
+                    "name": "string.quoted.double.gml",
+                    "begin": "\"",
+                    "end": "\"",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.gml",
+                            "match": "\\\\."
+                        }
+                    ]
+                },
+                {
+                    "name": "string.quoted.single.gml",
+                    "begin": "'",
+                    "end": "'",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.gml",
+                            "match": "\\\\."
+                        }
+                    ]
+                },
+                {
+                    "name": "string.template.gml",
+                    "begin": "`",
+                    "end": "`",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.gml",
+                            "match": "\\\\."
+                        },
+                        {
+                            "name": "meta.template.expression.gml",
+                            "begin": "\\$\\{",
+                            "end": "\\}",
+                            "captures": {
+                                "0": { "name": "punctuation.section.embedded.gml" }
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        "operators": {
+            "patterns": [
+                {
+                    "name": "keyword.operator.arithmetic.gml",
+                    "match": "(\\+\\+|--|\\+|-|\\*|/|\\^|%)"
+                },
+                {
+                    "name": "keyword.operator.comparison.gml",
+                    "match": "(==|!=|<|>|<=|>=)"
+                },
+                {
+                    "name": "keyword.operator.assignment.gml",
+                    "match": "(=|\\+=|-=|\\*=|/=|%=|\\^=|<<=|>>=|>>>=|&=|\\|=)"
+                },
+                {
+                    "name": "keyword.operator.bitwise.gml",
+                    "match": "(&|\\||~|<<|>>>|>>)"
+                },
+                {
+                    "name": "keyword.operator.logical.gml",
+                    "match": "(&&|\\|\\||!)"
+                },
+                {
+                    "name": "keyword.operator.ternary.gml",
+                    "match": "(\\?|:)"
+                },
+                {
+                    "name": "keyword.operator.nullcoalescing.gml",
+                    "match": "\\?\\?"
+                }
+            ]
+        },
+        "accessors": {
+            "patterns": [
+                {
+                    "name": "meta.accessor.array.gml",
+                    "match": "(\\[)(-?\\d+)(\\])",
+                    "captures": {
+                        "1": { "name": "punctuation.section.brackets.begin.gml" },
+                        "2": { "name": "constant.numeric.integer.gml" },
+                        "3": { "name": "punctuation.section.brackets.end.gml" }
+                    }
+                },
+                {
+                    "name": "meta.accessor.dsmap.gml",
+                    "match": "(\\[)(\"[^\"]*\")(\\])",
+                    "captures": {
+                        "1": { "name": "punctuation.section.brackets.begin.gml" },
+                        "2": { "name": "string.quoted.double.gml" },
+                        "3": { "name": "punctuation.section.brackets.end.gml" }
+                    }
+                },
+                {
+                    "name": "meta.accessor.dslist.gml",
+                    "match": "(\\|)(-?\\d+)(\\|)",
+                    "captures": {
+                        "1": { "name": "punctuation.section.brackets.begin.gml" },
+                        "2": { "name": "constant.numeric.integer.gml" },
+                        "3": { "name": "punctuation.section.brackets.end.gml" }
+                    }
+                },
+                {
+                    "name": "meta.accessor.dsgrid.gml",
+                    "match": "(#)(-?\\d+)(,)(-?\\d+)(#)",
+                    "captures": {
+                        "1": { "name": "punctuation.section.brackets.begin.gml" },
+                        "2": { "name": "constant.numeric.integer.gml" },
+                        "3": { "name": "punctuation.separator.gml" },
+                        "4": { "name": "constant.numeric.integer.gml" },
+                        "5": { "name": "punctuation.section.brackets.end.gml" }
+                    }
+                }
+            ]
+        },
+        "identifiers": {
+            "patterns": [
+                {
+                    "name": "variable.other.object.gml",
+                    "match": "\\b(obj_|scr_|spr_|snd_|rm_|fnt_|pth_|tl_|bg_|par_|o_|s_|r_)\\w+\\b"
+                },
+                {
+                    "name": "variable.other.global.gml",
+                    "match": "\\bglobal\\."
+                },
+                {
+                    "name": "variable.other.readwrite.gml",
+                    "match": "\\b(x|y|xprevious|yprevious|xstart|ystart|hspeed|vspeed|direction|speed|friction|gravity|gravity_direction|image_index|image_speed|image_xscale|image_yscale|image_angle|image_alpha|image_blend|image_number|mask_index|depth|visible|persistent|solid|path_index|path_position|path_positionprevious|path_speed|path_scale|path_orientation|path_endaction|alarm|sprite_index|sprite_width|sprite_height|sprite_xoffset|sprite_yoffset|bbox_left|bbox_right|bbox_top|bbox_bottom|layer|object_index|id|instance_count|instance_id|event_type|event_number|event_object|event_action|keyboard_key|keyboard_lastkey|keyboard_string|mouse_button|mouse_lastbutton|cursor_sprite|score|lives|health|show_score|show_lives|show_health|caption_score|caption_lives|caption_health|working_directory|program_directory|temp_directory|game_id|game_display_name|game_project_name|os_browser|os_type|os_device|os_version|display_aa|async_load|delta_time|fps|fps_real|current_time|current_date|current_year|current_month|current_day|current_weekday|current_hour|current_minute|current_second|webgl_enabled|view_enabled|view_current|view_visible|view_wport|view_hport|view_wview|view_hview|view_xport|view_yport|view_xview|view_yview|view_angle|view_hborder|view_vborder|view_hspeed|view_vspeed|view_object|view_surface_id|application_surface|room|room_width|room_height|room_caption|room_speed|room_persistent|room_first|room_last|room_next|room_previous|phy_speed|phy_speed_x|phy_speed_y|phy_speed_angular|phy_angular_velocity|phy_position_x|phy_position_y|phy_position_xprevious|phy_position_yprevious|phy_rotation|phy_fixed_rotation|phy_active|phy_bullet|phy_linear_damping|phy_angular_damping|phy_linear_velocity_x|phy_linear_velocity_y|phy_angular_velocity|phy_com_x|phy_com_y|phy_mass|phy_inertia|phy_dynamic|phy_collision_x|phy_collision_y|phy_collision_shape)\\b"
+                }
+            ]
+        }
+    }
+}

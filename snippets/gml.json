@@ -1,0 +1,117 @@
+{
+    "if": {
+        "prefix": "if",
+        "body": ["if (${1:condition})", "{", "\t${2:// ...}", "}"],
+        "description": "If statement"
+    },
+    "if-else": {
+        "prefix": "ifelse",
+        "body": ["if (${1:condition})", "{", "\t${2:// ...}", "}", "else", "{", "\t${3:// ...}", "}"],
+        "description": "If-else statement"
+    },
+    "for": {
+        "prefix": "for",
+        "body": ["for (var ${1:i} = 0; ${1:i} < ${2:count}; ${1:i}++)", "{", "\t${3:// ...}", "}"],
+        "description": "For loop"
+    },
+    "while": {
+        "prefix": "while",
+        "body": ["while (${1:condition})", "{", "\t${2:// ...}", "}"],
+        "description": "While loop"
+    },
+    "repeat": {
+        "prefix": "repeat",
+        "body": ["repeat (${1:count})", "{", "\t${2:// ...}", "}"],
+        "description": "Repeat loop"
+    },
+    "with": {
+        "prefix": "with",
+        "body": ["with (${1:object})", "{", "\t${2:// ...}", "}"],
+        "description": "With statement"
+    },
+    "switch": {
+        "prefix": "switch",
+        "body": ["switch (${1:expression})", "{", "\tcase ${2:value}:", "\t\t${3:// ...}", "\t\tbreak;", "", "\tdefault:", "\t\t${4:// ...}", "\t\tbreak;", "}"],
+        "description": "Switch statement"
+    },
+    "case": {
+        "prefix": "case",
+        "body": ["case ${1:value}:", "\t${2:// ...}", "\tbreak;"],
+        "description": "Case clause"
+    },
+    "var": {
+        "prefix": "var",
+        "body": ["var ${1:variable} = ${2:value};"],
+        "description": "Local variable declaration"
+    },
+    "globalvar": {
+        "prefix": "globalvar",
+        "body": ["globalvar ${1:variable};"],
+        "description": "Global variable declaration"
+    },
+    "enum": {
+        "prefix": "enum",
+        "body": ["enum ${1:name}", "{", "\t${2:member1},", "\t${3:member2}", "}"],
+        "description": "Enum declaration"
+    },
+    "function": {
+        "prefix": "function",
+        "body": ["function ${1:name}(${2:arguments})", "{", "\t${3:// ...}", "}"],
+        "description": "Function declaration"
+    },
+    "constructor": {
+        "prefix": "constructor",
+        "body": ["function ${1:ClassName}(${2:arguments}) constructor", "{", "\t${3:// ...}", "}"],
+        "description": "Constructor function"
+    },
+    "script_define": {
+        "prefix": "define",
+        "body": ["#define ${1:script_name}"],
+        "description": "Script definition header"
+    },
+    "region": {
+        "prefix": "region",
+        "body": ["#region ${1:name}", "${2:// ...}", "#endregion"],
+        "description": "Code region"
+    },
+    "draw_sprite": {
+        "prefix": "draw_sprite",
+        "body": ["draw_sprite(${1:sprite}, ${2:image_index}, ${3:x}, ${4:y});"],
+        "description": "Draw sprite"
+    },
+    "draw_text": {
+        "prefix": "draw_text",
+        "body": ["draw_text(${1:x}, ${2:y}, ${3:string});"],
+        "description": "Draw text"
+    },
+    "instance_create": {
+        "prefix": "instance_create",
+        "body": ["instance_create_layer(${1:x}, ${2:y}, ${3:layer}, ${4:object});"],
+        "description": "Create instance"
+    },
+    "audio_play": {
+        "prefix": "audio_play",
+        "body": ["audio_play_sound(${1:sound}, ${2:priority}, ${3:loop});"],
+        "description": "Play sound"
+    },
+    "scr_event_create": {
+        "prefix": "evcreate",
+        "body": ["/// @description ${1:Insert description here}", "", "${2:// ...}"],
+        "description": "Create event header"
+    },
+    "scr_event_step": {
+        "prefix": "evstep",
+        "body": ["/// @description ${1:Insert description here}", "", "${2:// ...}"],
+        "description": "Step event header"
+    },
+    "scr_event_draw": {
+        "prefix": "evdraw",
+        "body": ["/// @description ${1:Insert description here}", "", "draw_self();", "${2:// ...}"],
+        "description": "Draw event header"
+    },
+    "macro": {
+        "prefix": "macro",
+        "body": ["#macro ${1:NAME} ${2:value}"],
+        "description": "Macro definition"
+    }
+}

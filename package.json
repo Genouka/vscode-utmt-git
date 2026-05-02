@@ -1,0 +1,420 @@
+{
+  "name": "vscode-utmt-git",
+  "displayName": "UTMT Git",
+  "description": "将 UndertaleModTool 与 Git 集成，提供游戏资产管理、导入导出和版本控制工具",
+  "version": "0.0.2",
+  "publisher": "utmt-git",
+  "engines": {
+    "vscode": "^1.116.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "undertale",
+    "gamemaker",
+    "modding",
+    "git",
+    "gml"
+  ],
+  "activationEvents": [
+    "onView:vscode-utmt-git.assetExplorer",
+    "onCommand:vscode-utmt-git.initProject",
+    "onLanguage:utmt-gml"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscode-utmt-git.initProject",
+        "title": "UTMT Git: 初始化项目",
+        "category": "UTMT Git"
+      },
+      {
+        "command": "vscode-utmt-git.importAll",
+        "title": "UTMT Git: 导入所有资产到 data.win",
+        "category": "UTMT Git",
+        "icon": "$(arrow-down)"
+      },
+      {
+        "command": "vscode-utmt-git.exportCode",
+        "title": "UTMT Git: 导出代码",
+        "category": "UTMT Git"
+      },
+      {
+        "command": "vscode-utmt-git.exportSprites",
+        "title": "UTMT Git: 导出精灵图",
+        "category": "UTMT Git"
+      },
+      {
+        "command": "vscode-utmt-git.exportSounds",
+        "title": "UTMT Git: 导出音效",
+        "category": "UTMT Git"
+      },
+      {
+        "command": "vscode-utmt-git.exportObjects",
+        "title": "UTMT Git: 导出对象",
+        "category": "UTMT Git"
+      },
+      {
+        "command": "vscode-utmt-git.exportBackgrounds",
+        "title": "UTMT Git: 导出背景",
+        "category": "UTMT Git"
+      },
+      {
+        "command": "vscode-utmt-git.exportFonts",
+        "title": "UTMT Git: 导出字体",
+        "category": "UTMT Git"
+      },
+      {
+        "command": "vscode-utmt-git.exportAll",
+        "title": "UTMT Git: 导出所有资产",
+        "category": "UTMT Git",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "vscode-utmt-git.refreshTree",
+        "title": "UTMT Git: 刷新资产树",
+        "category": "UTMT Git",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "vscode-utmt-git.openAsset",
+        "title": "UTMT Git: 打开资产",
+        "category": "UTMT Git"
+      },
+      {
+        "command": "vscode-utmt-git.revealInExplorer",
+        "title": "UTMT Git: 在文件管理器中显示",
+        "category": "UTMT Git"
+      },
+      {
+        "command": "vscode-utmt-git.filterAssets",
+        "title": "UTMT Git: 筛选资产",
+        "category": "UTMT Git",
+        "icon": "$(search)"
+      },
+      {
+        "command": "vscode-utmt-git.clearFilter",
+        "title": "UTMT Git: 清除筛选",
+        "category": "UTMT Git",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "vscode-utmt-git.deleteAsset",
+        "title": "UTMT Git: 删除资产",
+        "category": "UTMT Git",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "vscode-utmt-git.renameAsset",
+        "title": "UTMT Git: 重命名资产",
+        "category": "UTMT Git",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "vscode-utmt-git.newScript",
+        "title": "UTMT Git: 新建脚本",
+        "category": "UTMT Git",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "vscode-utmt-git.newFolder",
+        "title": "UTMT Git: 新建文件夹",
+        "category": "UTMT Git",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "vscode-utmt-git.copyPath",
+        "title": "UTMT Git: 复制路径",
+        "category": "UTMT Git"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vscode-utmt-git",
+          "title": "UTMT Git",
+          "icon": "$(git-branch)"
+        }
+      ]
+    },
+    "views": {
+      "vscode-utmt-git": [
+        {
+          "id": "vscode-utmt-git.assetExplorer",
+          "name": "资产浏览器",
+          "icon": "$(package)"
+        },
+        {
+          "id": "vscode-utmt-git.inspector",
+          "name": "检查器",
+          "icon": "$(inspect)"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "vscode-utmt-git.assetExplorer",
+        "contents": "未找到 UTMT Git 项目。\n[初始化项目](command:vscode-utmt-git.initProject)\n\n请先在工作区中初始化一个 UTMT Git 项目。\n这将创建资产目录结构和配置文件。",
+        "when": "!vscode-utmt-git.projectLoaded"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "vscode-utmt-git.refreshTree",
+          "when": "view == vscode-utmt-git.assetExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "vscode-utmt-git.filterAssets",
+          "when": "view == vscode-utmt-git.assetExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "vscode-utmt-git.clearFilter",
+          "when": "view == vscode-utmt-git.assetExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "vscode-utmt-git.exportAll",
+          "when": "view == vscode-utmt-git.assetExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "vscode-utmt-git.importAll",
+          "when": "view == vscode-utmt-git.assetExplorer",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "vscode-utmt-git.exportCode",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == assetType-code",
+          "group": "inline@1"
+        },
+        {
+          "command": "vscode-utmt-git.exportSprites",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == assetType-sprites",
+          "group": "inline@1"
+        },
+        {
+          "command": "vscode-utmt-git.exportSounds",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == assetType-sounds",
+          "group": "inline@1"
+        },
+        {
+          "command": "vscode-utmt-git.exportObjects",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == assetType-objects",
+          "group": "inline@1"
+        },
+        {
+          "command": "vscode-utmt-git.exportBackgrounds",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == assetType-backgrounds",
+          "group": "inline@1"
+        },
+        {
+          "command": "vscode-utmt-git.exportFonts",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == assetType-fonts",
+          "group": "inline@1"
+        },
+        {
+          "command": "vscode-utmt-git.openAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem =~ /^asset-file-/",
+          "group": "inline"
+        },
+        {
+          "command": "vscode-utmt-git.openAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-object-json",
+          "group": "inline"
+        },
+        {
+          "command": "vscode-utmt-git.openAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-sprite-dir",
+          "group": "inline"
+        },
+        {
+          "command": "vscode-utmt-git.openAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-sound-dir",
+          "group": "inline"
+        },
+        {
+          "command": "vscode-utmt-git.renameAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem =~ /^asset-file-/",
+          "group": "7_modification@1"
+        },
+        {
+          "command": "vscode-utmt-git.renameAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-sprite-dir",
+          "group": "7_modification@1"
+        },
+        {
+          "command": "vscode-utmt-git.renameAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-sound-dir",
+          "group": "7_modification@1"
+        },
+        {
+          "command": "vscode-utmt-git.renameAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-object-json",
+          "group": "7_modification@1"
+        },
+        {
+          "command": "vscode-utmt-git.deleteAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem =~ /^asset-file-/",
+          "group": "7_modification@9"
+        },
+        {
+          "command": "vscode-utmt-git.deleteAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-sprite-dir",
+          "group": "7_modification@9"
+        },
+        {
+          "command": "vscode-utmt-git.deleteAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-sound-dir",
+          "group": "7_modification@9"
+        },
+        {
+          "command": "vscode-utmt-git.deleteAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-object-json",
+          "group": "7_modification@9"
+        },
+        {
+          "command": "vscode-utmt-git.newScript",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == assetType-code",
+          "group": "navigation@1"
+        },
+        {
+          "command": "vscode-utmt-git.newFolder",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == assetFolder",
+          "group": "navigation@1"
+        },
+        {
+          "command": "vscode-utmt-git.copyPath",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem =~ /^asset-file-/",
+          "group": "9_cutcopypaste"
+        },
+        {
+          "command": "vscode-utmt-git.copyPath",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-sprite-dir",
+          "group": "9_cutcopypaste"
+        },
+        {
+          "command": "vscode-utmt-git.copyPath",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-sound-dir",
+          "group": "9_cutcopypaste"
+        },
+        {
+          "command": "vscode-utmt-git.revealInExplorer",
+          "when": "view == vscode-utmt-git.assetExplorer",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "UTMT Git",
+      "properties": {
+        "vscode-utmt-git.cliPath": {
+          "type": "string",
+          "default": "",
+          "description": "UndertaleModCli 可执行文件路径（留空则使用扩展内置的 CLI）",
+          "order": 1
+        },
+        "vscode-utmt-git.dataWinPath": {
+          "type": "string",
+          "default": "data.win",
+          "description": "默认 data.win 文件路径（相对于项目根目录）",
+          "order": 2
+        },
+        "vscode-utmt-git.autoExportOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "保存 GML 文件时自动导出资产",
+          "order": 3
+        },
+        "vscode-utmt-git.autoImportBeforeRun": {
+          "type": "boolean",
+          "default": false,
+          "description": "执行操作前自动导入所有资产",
+          "order": 4
+        },
+        "vscode-utmt-git.diagnostics.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用 GML 诊断",
+          "order": 5
+        },
+        "vscode-utmt-git.tree.showFileCount": {
+          "type": "boolean",
+          "default": true,
+          "description": "在树视图中显示资产类型节点的文件计数",
+          "order": 6
+        },
+        "vscode-utmt-git.tree.openFoldersOnFilter": {
+          "type": "boolean",
+          "default": true,
+          "description": "筛选资产时自动展开文件夹",
+          "order": 7
+        },
+        "vscode-utmt-git.editing.reprocessDelay": {
+          "type": "number",
+          "default": 50,
+          "description": "输入后重新处理的延迟时间（毫秒）",
+          "order": 8
+        },
+        "vscode-utmt-git.externalChangeDelay": {
+          "type": "number",
+          "default": 100,
+          "description": "处理外部文件变更的延迟时间（毫秒）",
+          "order": 9
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "utmt-gml",
+        "extensions": [
+          ".gml"
+        ],
+        "aliases": [
+          "UTMT GML",
+          "GML"
+        ],
+        "configuration": "./language-configuration.json",
+        "firstLine": "^\\s*#define\\b"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "utmt-gml",
+        "scopeName": "source.utmt-gml",
+        "path": "./syntaxes/gml.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "utmt-gml",
+        "path": "./snippets/gml.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "pnpm run compile && pnpm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.116.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "typescript-eslint": "^8.56.1",
+    "eslint": "^9.39.3",
+    "typescript": "^5.9.3",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2"
+  },
+  "packageManager": "pnpm@10.12.1+sha512.f0dda8580f0ee9481c5c79a1d927b9164f2c478e90992ad268bbb2465a736984391d6333d2c327913578b2804af33474ca554ba29c04a8b13060a717675ae3ac"
+}
