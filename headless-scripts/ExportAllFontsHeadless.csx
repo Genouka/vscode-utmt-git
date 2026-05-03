@@ -33,6 +33,20 @@ try
         string fontDir = Path.Combine(outputDir, fontName);
         Directory.CreateDirectory(fontDir);
 
+        object texturePageItem = null;
+        if (fnt.Texture != null)
+        {
+            texturePageItem = new
+            {
+                TargetX = fnt.Texture.TargetX,
+                TargetY = fnt.Texture.TargetY,
+                TargetWidth = fnt.Texture.TargetWidth,
+                TargetHeight = fnt.Texture.TargetHeight,
+                BoundingWidth = fnt.Texture.BoundingWidth,
+                BoundingHeight = fnt.Texture.BoundingHeight
+            };
+        }
+
         var metadata = new
         {
             Name = fontName,
@@ -49,7 +63,8 @@ try
             AscenderOffset = fnt.AscenderOffset,
             Ascender = fnt.Ascender,
             SDFSpread = fnt.SDFSpread,
-            LineHeight = fnt.LineHeight
+            LineHeight = fnt.LineHeight,
+            TexturePageItem = texturePageItem
         };
 
         string jsonOutput = JsonConvert.SerializeObject(metadata, Formatting.Indented);
@@ -58,7 +73,7 @@ try
         if (fnt.Texture != null)
         {
             string fileName = $"{fontName}_0.png";
-            worker.ExportAsPNG(fnt.Texture, Path.Combine(fontDir, fileName), null, false);
+            worker.ExportAsPNG(fnt.Texture, Path.Combine(fontDir, fileName), null, true);
         }
 
         if (fnt.Glyphs != null && fnt.Glyphs.Count > 0)

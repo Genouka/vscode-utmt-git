@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using UndertaleModLib.Models;
 using UndertaleModLib.Util;
@@ -32,6 +33,28 @@ try
         string spriteDir = Path.Combine(outputDir, spriteName);
         Directory.CreateDirectory(spriteDir);
 
+        var texturePageItems = new List<object>();
+        for (int i = 0; i < spr.Textures.Count; i++)
+        {
+            if (spr.Textures[i]?.Texture != null)
+            {
+                var tpi = spr.Textures[i].Texture;
+                texturePageItems.Add(new
+                {
+                    TargetX = tpi.TargetX,
+                    TargetY = tpi.TargetY,
+                    TargetWidth = tpi.TargetWidth,
+                    TargetHeight = tpi.TargetHeight,
+                    BoundingWidth = tpi.BoundingWidth,
+                    BoundingHeight = tpi.BoundingHeight
+                });
+            }
+            else
+            {
+                texturePageItems.Add(null);
+            }
+        }
+
         var metadata = new
         {
             Name = spriteName,
@@ -48,7 +71,8 @@ try
             IsSpecialType = spr.IsSpecialType,
             SVersion = spr.SVersion,
             GMS2PlaybackSpeed = spr.GMS2PlaybackSpeed,
-            GMS2PlaybackSpeedType = (int)spr.GMS2PlaybackSpeedType
+            GMS2PlaybackSpeedType = (int)spr.GMS2PlaybackSpeedType,
+            TexturePageItems = texturePageItems
         };
 
         string jsonOutput = JsonConvert.SerializeObject(metadata, Formatting.Indented);
@@ -59,7 +83,7 @@ try
             if (spr.Textures[i]?.Texture != null)
             {
                 string fileName = $"{spriteName}_{i}.png";
-                worker.ExportAsPNG(spr.Textures[i].Texture, Path.Combine(spriteDir, fileName), null, false);
+                worker.ExportAsPNG(spr.Textures[i].Texture, Path.Combine(spriteDir, fileName), null, true);
             }
         }
 

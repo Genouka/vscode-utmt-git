@@ -165,8 +165,42 @@ if (!string.IsNullOrEmpty(dirSounds))
 
 Console.WriteLine($"[UTMT-IMPORT] Phase: Graphics");
 
+Dictionary<string, JObject> spriteMetadataCache = new Dictionary<string, JObject>();
+Dictionary<string, JObject> bgMetadataCache = new Dictionary<string, JObject>();
+Dictionary<string, JObject> fontMetadataCache = new Dictionary<string, JObject>();
+
+void LoadMetadataCache(string folderPath, Dictionary<string, JObject> cache)
+{
+    if (!Directory.Exists(folderPath)) return;
+    foreach (string dir in Directory.GetDirectories(folderPath))
+    {
+        string metaPath = Path.Combine(dir, "metadata.json");
+        if (File.Exists(metaPath))
+        {
+            try
+            {
+                JObject meta = JObject.Parse(File.ReadAllText(metaPath));
+                string name = (string)meta["Name"];
+                if (!string.IsNullOrEmpty(name))
+                    cache[name] = meta;
+            }
+            catch { }
+        }
+    }
+}
+
+string dirSprites = GetFolderCI(repoDir, "sprites");
+if (!string.IsNullOrEmpty(dirSprites)) LoadMetadataCache(dirSprites, spriteMetadataCache);
+
+string dirBackgrounds = GetFolderCI(repoDir, "backgrounds");
+if (!string.IsNullOrEmpty(dirBackgrounds)) LoadMetadataCache(dirBackgrounds, bgMetadataCache);
+
+string dirFonts = GetFolderCI(repoDir, "fonts");
+if (!string.IsNullOrEmpty(dirFonts)) LoadMetadataCache(dirFonts, fontMetadataCache);
+
 List<TextureInfo> sourceTextures = new List<TextureInfo>();
-void ScanGraphicsFolder(string folderPath, SpriteType type)
+
+void ScanGraphicsFolder(string folderPath, SpriteType type, Dictionary<string, JObject> metaCache)
 {
     if (!Directory.Exists(folderPath)) return;
 
@@ -178,33 +212,136 @@ void ScanGraphicsFolder(string folderPath, SpriteType type)
             Image = img, SType = type, Name = Path.GetFileNameWithoutExtension(file)
         };
 
+        string parentDir = Path.GetDirectoryName(file);
+        string parentName = Path.GetFileName(parentDir);
+        JObject parentMeta = null;
+        metaCache?.TryGetValue(parentName, out parentMeta);
+
         if (type != SpriteType.Background)
         {
-            img.BorderColor = MagickColors.Transparent;
-            img.BackgroundColor = MagickColors.Transparent;
-            img.Border(1);
-            IMagickGeometry bbox = img.BoundingBox;
-            if (bbox != null) {
-                ti.TargetX = bbox.X - 1; ti.TargetY = bbox.Y - 1;
-                img.Trim();
-            } else {
-                ti.TargetX = 0; ti.TargetY = 0; img.Crop(1, 1);
+            int metaTargetX = -1, metaTargetY = -1;
+            int metaBoundingWidth = -1, metaBoundingHeight = -1;
+            int metaTargetWidth = -1, metaTargetHeight = -1;
+
+            if (type == SpriteType.Sprite && parentMeta != null)
+            {
+                JArray tpiArray = parentMeta["TexturePageItems"] as JArray;
+                if (tpiArray != null)
+                {
+                    int lastUnderscore = ti.Name.LastIndexOf('_');
+                    int frameIdx = -1;
+                    if (lastUnderscore > 0 && int.TryParse(ti.Name.Substring(lastUnderscore + 1), out frameIdx))
+                    {
+                        if (frameIdx >= 0 && frameIdx < tpiArray.Count && tpiArray[frameIdx] != null && tpiArray[frameIdx].Type != JTokenType.Null)
+                        {
+                            JObject tpiObj = tpiArray[frameIdx] as JObject;
+                            if (tpiObj != null)
+                            {
+                                metaTargetX = (int?)tpiObj["TargetX"] ?? -1;
+                                metaTargetY = (int?)tpiObj["TargetY"] ?? -1;
+                                metaTargetWidth = (int?)tpiObj["TargetWidth"] ?? -1;
+                                metaTargetHeight = (int?)tpiObj["TargetHeight"] ?? -1;
+                                metaBoundingWidth = (int?)tpiObj["BoundingWidth"] ?? -1;
+                                metaBoundingHeight = (int?)tpiObj["BoundingHeight"] ?? -1;
+                            }
+                        }
+                    }
+                }
             }
-            img.ResetPage();
-            ti.Width = (int)img.Width; ti.Height = (int)img.Height;
+            else if (type == SpriteType.Font && parentMeta != null)
+            {
+                JObject tpiObj = parentMeta["TexturePageItem"] as JObject;
+                if (tpiObj != null)
+                {
+                    metaTargetX = (int?)tpiObj["TargetX"] ?? -1;
+                    metaTargetY = (int?)tpiObj["TargetY"] ?? -1;
+                    metaTargetWidth = (int?)tpiObj["TargetWidth"] ?? -1;
+                    metaTargetHeight = (int?)tpiObj["TargetHeight"] ?? -1;
+                    metaBoundingWidth = (int?)tpiObj["BoundingWidth"] ?? -1;
+                    metaBoundingHeight = (int?)tpiObj["BoundingHeight"] ?? -1;
+                }
+            }
+
+            if (metaTargetX >= 0 && metaTargetY >= 0 && metaBoundingWidth > 0 && metaBoundingHeight > 0)
+            {
+                ti.TargetX = metaTargetX;
+                ti.TargetY = metaTargetY;
+                ti.BoundingWidth = metaBoundingWidth;
+                ti.BoundingHeight = metaBoundingHeight;
+
+                if (metaTargetWidth > 0 && metaTargetHeight > 0)
+                {
+                    img.Trim();
+                    img.ResetPage();
+                    if ((int)img.Width != metaTargetWidth || (int)img.Height != metaTargetHeight)
+                    {
+                        img.InterpolativeResize((uint)metaTargetWidth, (uint)metaTargetHeight, PixelInterpolateMethod.Bilinear);
+                    }
+                    ti.Width = metaTargetWidth;
+                    ti.Height = metaTargetHeight;
+                }
+                else
+                {
+                    img.BorderColor = MagickColors.Transparent;
+                    img.BackgroundColor = MagickColors.Transparent;
+                    img.Border(1);
+                    IMagickGeometry bbox = img.BoundingBox;
+                    if (bbox != null)
+                    {
+                        img.Trim();
+                    }
+                    else
+                    {
+                        img.Crop(1, 1);
+                    }
+                    img.ResetPage();
+                    ti.Width = (int)img.Width;
+                    ti.Height = (int)img.Height;
+                }
+            }
+            else
+            {
+                img.BorderColor = MagickColors.Transparent;
+                img.BackgroundColor = MagickColors.Transparent;
+                img.Border(1);
+                IMagickGeometry bbox = img.BoundingBox;
+                if (bbox != null) {
+                    ti.TargetX = bbox.X - 1; ti.TargetY = bbox.Y - 1;
+                    img.Trim();
+                } else {
+                    ti.TargetX = 0; ti.TargetY = 0; img.Crop(1, 1);
+                }
+                img.ResetPage();
+                ti.Width = (int)img.Width; ti.Height = (int)img.Height;
+                ti.BoundingWidth = ti.TargetX + ti.Width;
+                ti.BoundingHeight = ti.TargetY + ti.Height;
+            }
+        }
+        else
+        {
+            JObject tpiObj = parentMeta?["TexturePageItem"] as JObject;
+            if (tpiObj != null)
+            {
+                ti.TargetX = (int?)tpiObj["TargetX"] ?? 0;
+                ti.TargetY = (int?)tpiObj["TargetY"] ?? 0;
+                ti.BoundingWidth = (int?)tpiObj["BoundingWidth"] ?? ti.Width;
+                ti.BoundingHeight = (int?)tpiObj["BoundingHeight"] ?? ti.Height;
+            }
+            else
+            {
+                ti.TargetX = 0;
+                ti.TargetY = 0;
+                ti.BoundingWidth = ti.Width;
+                ti.BoundingHeight = ti.Height;
+            }
         }
         sourceTextures.Add(ti);
     }
 }
 
-string dirSprites = GetFolderCI(repoDir, "sprites");
-if (!string.IsNullOrEmpty(dirSprites)) ScanGraphicsFolder(dirSprites, SpriteType.Sprite);
-
-string dirBackgrounds = GetFolderCI(repoDir, "backgrounds");
-if (!string.IsNullOrEmpty(dirBackgrounds)) ScanGraphicsFolder(dirBackgrounds, SpriteType.Background);
-
-string dirFonts = GetFolderCI(repoDir, "fonts");
-if (!string.IsNullOrEmpty(dirFonts)) ScanGraphicsFolder(dirFonts, SpriteType.Font);
+if (!string.IsNullOrEmpty(dirSprites)) ScanGraphicsFolder(dirSprites, SpriteType.Sprite, spriteMetadataCache);
+if (!string.IsNullOrEmpty(dirBackgrounds)) ScanGraphicsFolder(dirBackgrounds, SpriteType.Background, bgMetadataCache);
+if (!string.IsNullOrEmpty(dirFonts)) ScanGraphicsFolder(dirFonts, SpriteType.Font, fontMetadataCache);
 
 if (sourceTextures.Count > 0)
 {
@@ -249,8 +386,8 @@ if (sourceTextures.Count > 0)
                     SourceWidth = (ushort)n.Bounds.Width, SourceHeight = (ushort)n.Bounds.Height,
                     TargetX = (ushort)n.Texture.TargetX, TargetY = (ushort)n.Texture.TargetY,
                     TargetWidth = (ushort)n.Bounds.Width, TargetHeight = (ushort)n.Bounds.Height,
-                    BoundingWidth = (ushort)(n.Texture.TargetX + n.Bounds.Width),
-                    BoundingHeight = (ushort)(n.Texture.TargetY + n.Bounds.Height),
+                    BoundingWidth = (ushort)n.Texture.BoundingWidth,
+                    BoundingHeight = (ushort)n.Texture.BoundingHeight,
                     TexturePage = embTex
                 };
                 Data.TexturePageItems.Add(tpi);
@@ -450,7 +587,7 @@ ScriptMessage("Import complete! All assets integrated successfully.");
 
 /* INTERNALS */
 public enum SpriteType { Sprite, Background, Font }
-public class TextureInfo { public string Source; public string Name; public int Width; public int Height; public int TargetX; public int TargetY; public SpriteType SType; public MagickImage Image; }
+public class TextureInfo { public string Source; public string Name; public int Width; public int Height; public int TargetX; public int TargetY; public int BoundingWidth; public int BoundingHeight; public SpriteType SType; public MagickImage Image; }
 public class Rect { public int X; public int Y; public int Width; public int Height; public int Right { get { return X + Width; } } public int Down { get { return Y + Height; } } public int Area { get { return Width * Height; } } }
 public class Split : Rect {
     public bool Invalidated = false;

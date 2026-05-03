@@ -31,6 +31,20 @@ try
         string bgDir = Path.Combine(outputDir, bgName);
         Directory.CreateDirectory(bgDir);
 
+        object texturePageItem = null;
+        if (bg.Texture != null)
+        {
+            texturePageItem = new
+            {
+                TargetX = bg.Texture.TargetX,
+                TargetY = bg.Texture.TargetY,
+                TargetWidth = bg.Texture.TargetWidth,
+                TargetHeight = bg.Texture.TargetHeight,
+                BoundingWidth = bg.Texture.BoundingWidth,
+                BoundingHeight = bg.Texture.BoundingHeight
+            };
+        }
+
         var metadata = new
         {
             Name = bgName,
@@ -45,7 +59,8 @@ try
             GMS2TileColumns = bg.GMS2TileColumns,
             GMS2ItemsPerTileCount = bg.GMS2ItemsPerTileCount,
             GMS2TileCount = bg.GMS2TileCount,
-            GMS2FrameLength = bg.GMS2FrameLength
+            GMS2FrameLength = bg.GMS2FrameLength,
+            TexturePageItem = texturePageItem
         };
 
         string jsonOutput = JsonConvert.SerializeObject(metadata, Formatting.Indented);
@@ -54,7 +69,7 @@ try
         if (bg.Texture != null)
         {
             string fileName = $"{bgName}_0.png";
-            worker.ExportAsPNG(bg.Texture, Path.Combine(bgDir, fileName), null, false);
+            worker.ExportAsPNG(bg.Texture, Path.Combine(bgDir, fileName), null, true);
         }
 
         exported++;
