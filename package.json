@@ -2,7 +2,7 @@
   "name": "vscode-utmt-git",
   "displayName": "UTMT Git",
   "description": "将 UndertaleModTool 与 Git 集成，提供游戏资产管理、导入导出和版本控制工具",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "utmt-git",
   "engines": {
     "vscode": "^1.116.0"
