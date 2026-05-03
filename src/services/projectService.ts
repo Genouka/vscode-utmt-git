@@ -142,9 +142,6 @@ export class ProjectService implements vscode.Disposable {
     }
 
     getCliPath(): string {
-        if (this.config?.cliPath) {
-            return this.config.cliPath;
-        }
         const cfg = vscode.workspace.getConfiguration('vscode-utmt-git');
         const configPath = cfg.get<string>('cliPath', '');
         if (configPath && configPath !== 'UndertaleModCli') {
@@ -168,7 +165,7 @@ export class ProjectService implements vscode.Disposable {
         return this.config !== undefined;
     }
 
-    async initializeProject(rootDir: string, dataWinPath: string, cliPath: string): Promise<void> {
+    async initializeProject(rootDir: string, dataWinPath: string): Promise<void> {
         this.projectRoot = rootDir;
 
         const dirs = Object.values(DEFAULT_ASSET_DIRS);
@@ -181,7 +178,7 @@ export class ProjectService implements vscode.Disposable {
             }
         }
 
-        const config = createDefaultConfig(dataWinPath, cliPath);
+        const config = createDefaultConfig(dataWinPath);
         await this.saveConfig(config);
         await this.loadProject(rootDir);
         this.logger.info(`项目已初始化：${rootDir}`);

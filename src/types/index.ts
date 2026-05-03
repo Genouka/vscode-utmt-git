@@ -1,6 +1,5 @@
 export interface UtmtGitConfig {
     dataWinPath: string;
-    cliPath: string;
     assetDirs: AssetDirs;
 }
 

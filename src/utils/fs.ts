@@ -36,10 +36,9 @@ export async function findConfigFile(workspaceRoot: string): Promise<string | un
     return undefined;
 }
 
-export function createDefaultConfig(dataWinPath: string, cliPath: string): UtmtGitConfig {
+export function createDefaultConfig(dataWinPath: string): UtmtGitConfig {
     return {
         dataWinPath,
-        cliPath,
         assetDirs: { ...DEFAULT_ASSET_DIRS },
     };
 }

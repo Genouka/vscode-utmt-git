@@ -3,7 +3,6 @@ import * as path from 'path';
 import { ProjectService } from '../services/projectService';
 import { Logger } from '../utils/logger';
 import { fileExists } from '../utils/fs';
-import { resolveBundledCliPath } from '../utils/cliResolver';
 
 export function registerInitProject(
     context: vscode.ExtensionContext,
@@ -78,19 +77,6 @@ export function registerInitProject(
                 dataWinPath = path.relative(rootDir, dataWinUri[0].fsPath);
             }
 
-            const bundledCli = resolveBundledCliPath(context.extensionPath);
-            let cliPath = bundledCli || cfg.get<string>('cliPath', 'UndertaleModCli');
-
-            const cliOptions: vscode.InputBoxOptions = {
-                prompt: 'UndertaleModCli 可执行文件路径',
-                value: cliPath,
-                placeHolder: 'UndertaleModCli',
-            };
-            const inputCliPath = await vscode.window.showInputBox(cliOptions);
-            if (inputCliPath !== undefined) {
-                cliPath = inputCliPath;
-            }
-
             await vscode.window.withProgress(
                 {
                     location: vscode.ProgressLocation.Notification,
@@ -98,7 +84,7 @@ export function registerInitProject(
                     cancellable: false,
                 },
                 async () => {
-                    await projectService.initializeProject(rootDir, dataWinPath, cliPath);
+                    await projectService.initializeProject(rootDir, dataWinPath);
                 }
             );
 
