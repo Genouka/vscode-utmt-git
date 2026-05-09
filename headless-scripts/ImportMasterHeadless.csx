@@ -54,110 +54,117 @@ if (!string.IsNullOrEmpty(dirSounds))
 
     foreach (string file in soundFiles)
     {
-        string filename = Path.GetFileName(file);
-        if (!(filename.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase) || filename.EndsWith(".wav", StringComparison.OrdinalIgnoreCase)))
-            continue;
-
-        string soundName = Path.GetFileNameWithoutExtension(file);
-        bool isOGG = filename.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase);
-
-        float sndVolume = 1.0f;
-        float sndPitch = 1.0f;
-        uint sndEffects = 0;
-        string sndAudioGroupName = null;
-
-        string metaPath = Path.Combine(Path.GetDirectoryName(file), "metadata.json");
-        if (File.Exists(metaPath))
+        try
         {
-            JObject meta = JObject.Parse(File.ReadAllText(metaPath));
-            if (meta["Volume"] != null) sndVolume = (float)meta["Volume"];
-            if (meta["Pitch"] != null) sndPitch = (float)meta["Pitch"];
-            if (meta["Effects"] != null) sndEffects = (uint)meta["Effects"];
-            if (meta["AudioGroup"] != null) sndAudioGroupName = (string)meta["AudioGroup"];
-        }
+            string filename = Path.GetFileName(file);
+            if (!(filename.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase) || filename.EndsWith(".wav", StringComparison.OrdinalIgnoreCase)))
+                continue;
 
-        UndertaleSound existingSound = Data.Sounds.FirstOrDefault(s => s.Name?.Content == soundName);
-        UndertaleEmbeddedAudio soundData = new UndertaleEmbeddedAudio { Data = File.ReadAllBytes(file) };
+            string soundName = Path.GetFileNameWithoutExtension(file);
+            bool isOGG = filename.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase);
 
-        int targetGroupID = Data.GetBuiltinSoundGroupID();
-        if (!string.IsNullOrEmpty(sndAudioGroupName))
-        {
-            var ag = Data.AudioGroups.FirstOrDefault(g => g.Name?.Content == sndAudioGroupName);
-            if (ag != null) targetGroupID = Data.AudioGroups.IndexOf(ag);
-        }
-        else if (existingSound != null)
-        {
-            targetGroupID = existingSound.GroupID;
-        }
+            float sndVolume = 1.0f;
+            float sndPitch = 1.0f;
+            uint sndEffects = 0;
+            string sndAudioGroupName = null;
 
-        bool isExternalGroup = (targetGroupID != Data.GetBuiltinSoundGroupID());
-        int audioID = -1;
-
-        if (isExternalGroup)
-        {
-            UndertaleData audioGroupDat;
-            string relativePath = $"audiogroup{targetGroupID}.dat";
-            if (targetGroupID < Data.AudioGroups.Count && Data.AudioGroups[targetGroupID] is UndertaleAudioGroup { Path.Content: string customPath })
-                relativePath = customPath;
-
-            string agPath = JoinWithinDirectory(Path.GetDirectoryName(FilePath), relativePath);
-            using (FileStream fsRead = new(agPath, FileMode.Open, FileAccess.Read))
-                audioGroupDat = UndertaleIO.Read(fsRead);
-
-            if (existingSound?.AudioFile != null)
-                audioGroupDat.EmbeddedAudio.Remove(existingSound.AudioFile);
-
-            audioGroupDat.EmbeddedAudio.Add(soundData);
-            audioID = audioGroupDat.EmbeddedAudio.Count - 1;
-
-            using (FileStream fsWrite = new(agPath, FileMode.Create))
-                UndertaleIO.Write(fsWrite, audioGroupDat);
-        }
-        else
-        {
-            if (existingSound?.AudioFile != null)
-                Data.EmbeddedAudio.Remove(existingSound.AudioFile);
-
-            Data.EmbeddedAudio.Add(soundData);
-            audioID = Data.EmbeddedAudio.Count - 1;
-        }
-
-        UndertaleSound.AudioEntryFlags newFlags = isOGG
-            ? (UndertaleSound.AudioEntryFlags.IsEmbedded | UndertaleSound.AudioEntryFlags.IsCompressed | UndertaleSound.AudioEntryFlags.Regular)
-            : (UndertaleSound.AudioEntryFlags.IsEmbedded | UndertaleSound.AudioEntryFlags.Regular);
-
-        if (existingSound == null)
-        {
-            UndertaleSound newSound = new UndertaleSound()
+            string metaPath = Path.Combine(Path.GetDirectoryName(file), "metadata.json");
+            if (File.Exists(metaPath))
             {
-                Name = Data.Strings.MakeString(soundName),
-                Type = Data.Strings.MakeString(isOGG ? ".ogg" : ".wav"),
-                File = Data.Strings.MakeString(filename),
-                Flags = newFlags,
-                Effects = sndEffects,
-                Volume = sndVolume,
-                Pitch = sndPitch,
-                AudioID = audioID,
-                AudioFile = isExternalGroup ? null : soundData,
-                GroupID = targetGroupID,
-                AudioGroup = Data.AudioGroups[targetGroupID]
-            };
-            Data.Sounds.Add(newSound);
+                JObject meta = JObject.Parse(File.ReadAllText(metaPath));
+                if (meta["Volume"] != null) sndVolume = (float)meta["Volume"];
+                if (meta["Pitch"] != null) sndPitch = (float)meta["Pitch"];
+                if (meta["Effects"] != null) sndEffects = (uint)meta["Effects"];
+                if (meta["AudioGroup"] != null) sndAudioGroupName = (string)meta["AudioGroup"];
+            }
+
+            UndertaleSound existingSound = Data.Sounds.FirstOrDefault(s => s.Name?.Content == soundName);
+            UndertaleEmbeddedAudio soundData = new UndertaleEmbeddedAudio { Data = File.ReadAllBytes(file) };
+
+            int targetGroupID = Data.GetBuiltinSoundGroupID();
+            if (!string.IsNullOrEmpty(sndAudioGroupName))
+            {
+                var ag = Data.AudioGroups.FirstOrDefault(g => g.Name?.Content == sndAudioGroupName);
+                if (ag != null) targetGroupID = Data.AudioGroups.IndexOf(ag);
+            }
+            else if (existingSound != null)
+            {
+                targetGroupID = existingSound.GroupID;
+            }
+
+            bool isExternalGroup = (targetGroupID != Data.GetBuiltinSoundGroupID());
+            int audioID = -1;
+
+            if (isExternalGroup)
+            {
+                UndertaleData audioGroupDat;
+                string relativePath = $"audiogroup{targetGroupID}.dat";
+                if (targetGroupID < Data.AudioGroups.Count && Data.AudioGroups[targetGroupID] is UndertaleAudioGroup { Path.Content: string customPath })
+                    relativePath = customPath;
+
+                string agPath = JoinWithinDirectory(Path.GetDirectoryName(FilePath), relativePath);
+                using (FileStream fsRead = new(agPath, FileMode.Open, FileAccess.Read))
+                    audioGroupDat = UndertaleIO.Read(fsRead);
+
+                if (existingSound?.AudioFile != null)
+                    audioGroupDat.EmbeddedAudio.Remove(existingSound.AudioFile);
+
+                audioGroupDat.EmbeddedAudio.Add(soundData);
+                audioID = audioGroupDat.EmbeddedAudio.Count - 1;
+
+                using (FileStream fsWrite = new(agPath, FileMode.Create))
+                    UndertaleIO.Write(fsWrite, audioGroupDat);
+            }
+            else
+            {
+                if (existingSound?.AudioFile != null)
+                    Data.EmbeddedAudio.Remove(existingSound.AudioFile);
+
+                Data.EmbeddedAudio.Add(soundData);
+                audioID = Data.EmbeddedAudio.Count - 1;
+            }
+
+            UndertaleSound.AudioEntryFlags newFlags = isOGG
+                ? (UndertaleSound.AudioEntryFlags.IsEmbedded | UndertaleSound.AudioEntryFlags.IsCompressed | UndertaleSound.AudioEntryFlags.Regular)
+                : (UndertaleSound.AudioEntryFlags.IsEmbedded | UndertaleSound.AudioEntryFlags.Regular);
+
+            if (existingSound == null)
+            {
+                UndertaleSound newSound = new UndertaleSound()
+                {
+                    Name = Data.Strings.MakeString(soundName),
+                    Type = Data.Strings.MakeString(isOGG ? ".ogg" : ".wav"),
+                    File = Data.Strings.MakeString(filename),
+                    Flags = newFlags,
+                    Effects = sndEffects,
+                    Volume = sndVolume,
+                    Pitch = sndPitch,
+                    AudioID = audioID,
+                    AudioFile = isExternalGroup ? null : soundData,
+                    GroupID = targetGroupID,
+                    AudioGroup = Data.AudioGroups[targetGroupID]
+                };
+                Data.Sounds.Add(newSound);
+            }
+            else
+            {
+                existingSound.AudioID = audioID;
+                existingSound.AudioFile = isExternalGroup ? null : soundData;
+                existingSound.File = Data.Strings.MakeString(filename);
+                existingSound.Type = Data.Strings.MakeString(isOGG ? ".ogg" : ".wav");
+                existingSound.Flags = newFlags;
+                existingSound.Volume = sndVolume;
+                existingSound.Pitch = sndPitch;
+                existingSound.Effects = sndEffects;
+                existingSound.GroupID = targetGroupID;
+                existingSound.AudioGroup = Data.AudioGroups[targetGroupID];
+            }
+            Console.WriteLine($"[UTMT-IMPORT] Imported sound: {soundName}");
         }
-        else
+        catch (Exception ex)
         {
-            existingSound.AudioID = audioID;
-            existingSound.AudioFile = isExternalGroup ? null : soundData;
-            existingSound.File = Data.Strings.MakeString(filename);
-            existingSound.Type = Data.Strings.MakeString(isOGG ? ".ogg" : ".wav");
-            existingSound.Flags = newFlags;
-            existingSound.Volume = sndVolume;
-            existingSound.Pitch = sndPitch;
-            existingSound.Effects = sndEffects;
-            existingSound.GroupID = targetGroupID;
-            existingSound.AudioGroup = Data.AudioGroups[targetGroupID];
+            Console.WriteLine($"[UTMT-IMPORT] Error importing sound file '{file}': {ex.Message}");
         }
-        Console.WriteLine($"[UTMT-IMPORT] Imported sound: {soundName}");
     }
 }
 
@@ -174,17 +181,27 @@ void LoadMetadataCache(string folderPath, Dictionary<string, JObject> cache)
     if (!Directory.Exists(folderPath)) return;
     foreach (string dir in Directory.GetDirectories(folderPath))
     {
-        string metaPath = Path.Combine(dir, "metadata.json");
-        if (File.Exists(metaPath))
+        try
         {
-            try
+            string metaPath = Path.Combine(dir, "metadata.json");
+            if (File.Exists(metaPath))
             {
-                JObject meta = JObject.Parse(File.ReadAllText(metaPath));
-                string name = (string)meta["Name"];
-                if (!string.IsNullOrEmpty(name))
-                    cache[name] = meta;
+                try
+                {
+                    JObject meta = JObject.Parse(File.ReadAllText(metaPath));
+                    string name = (string)meta["Name"];
+                    if (!string.IsNullOrEmpty(name))
+                        cache[name] = meta;
+                }
+                catch
+                {
+                    Console.WriteLine($"[UTMT-IMPORT] Warning: Failed to parse metadata.json in '{dir}'. Skipping metadata cache for this entry.");
+                }
             }
-            catch { }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[UTMT-IMPORT] Error loading metadata from '{dir}': {ex.Message}");
         }
     }
 }
@@ -206,79 +223,105 @@ void ScanGraphicsFolder(string folderPath, SpriteType type, Dictionary<string, J
 
     foreach (string file in Directory.GetFiles(folderPath, "*.png", SearchOption.AllDirectories))
     {
-        MagickImage img = new MagickImage(file);
-        TextureInfo ti = new TextureInfo {
-            Source = file, Width = (int)img.Width, Height = (int)img.Height,
-            Image = img, SType = type, Name = Path.GetFileNameWithoutExtension(file)
-        };
-
-        string parentDir = Path.GetDirectoryName(file);
-        string parentName = Path.GetFileName(parentDir);
-        JObject parentMeta = null;
-        metaCache?.TryGetValue(parentName, out parentMeta);
-
-        if (type != SpriteType.Background)
+        try
         {
-            int metaTargetX = -1, metaTargetY = -1;
-            int metaBoundingWidth = -1, metaBoundingHeight = -1;
-            int metaTargetWidth = -1, metaTargetHeight = -1;
-
-            if (type == SpriteType.Sprite && parentMeta != null)
+            MagickImage img = new MagickImage(file);
+            TextureInfo ti = new TextureInfo
             {
-                JArray tpiArray = parentMeta["TexturePageItems"] as JArray;
-                if (tpiArray != null)
+                Source = file,
+                Width = (int)img.Width,
+                Height = (int)img.Height,
+                Image = img,
+                SType = type,
+                Name = Path.GetFileNameWithoutExtension(file)
+            };
+
+            string parentDir = Path.GetDirectoryName(file);
+            string parentName = Path.GetFileName(parentDir);
+            JObject parentMeta = null;
+            metaCache?.TryGetValue(parentName, out parentMeta);
+
+            if (type != SpriteType.Background)
+            {
+                int metaTargetX = -1, metaTargetY = -1;
+                int metaBoundingWidth = -1, metaBoundingHeight = -1;
+                int metaTargetWidth = -1, metaTargetHeight = -1;
+
+                if (type == SpriteType.Sprite && parentMeta != null)
                 {
-                    int lastUnderscore = ti.Name.LastIndexOf('_');
-                    int frameIdx = -1;
-                    if (lastUnderscore > 0 && int.TryParse(ti.Name.Substring(lastUnderscore + 1), out frameIdx))
+                    JArray tpiArray = parentMeta["TexturePageItems"] as JArray;
+                    if (tpiArray != null)
                     {
-                        if (frameIdx >= 0 && frameIdx < tpiArray.Count && tpiArray[frameIdx] != null && tpiArray[frameIdx].Type != JTokenType.Null)
+                        int lastUnderscore = ti.Name.LastIndexOf('_');
+                        int frameIdx = -1;
+                        if (lastUnderscore > 0 && int.TryParse(ti.Name.Substring(lastUnderscore + 1), out frameIdx))
                         {
-                            JObject tpiObj = tpiArray[frameIdx] as JObject;
-                            if (tpiObj != null)
+                            if (frameIdx >= 0 && frameIdx < tpiArray.Count && tpiArray[frameIdx] != null && tpiArray[frameIdx].Type != JTokenType.Null)
                             {
-                                metaTargetX = (int?)tpiObj["TargetX"] ?? -1;
-                                metaTargetY = (int?)tpiObj["TargetY"] ?? -1;
-                                metaTargetWidth = (int?)tpiObj["TargetWidth"] ?? -1;
-                                metaTargetHeight = (int?)tpiObj["TargetHeight"] ?? -1;
-                                metaBoundingWidth = (int?)tpiObj["BoundingWidth"] ?? -1;
-                                metaBoundingHeight = (int?)tpiObj["BoundingHeight"] ?? -1;
+                                JObject tpiObj = tpiArray[frameIdx] as JObject;
+                                if (tpiObj != null)
+                                {
+                                    metaTargetX = (int?)tpiObj["TargetX"] ?? -1;
+                                    metaTargetY = (int?)tpiObj["TargetY"] ?? -1;
+                                    metaTargetWidth = (int?)tpiObj["TargetWidth"] ?? -1;
+                                    metaTargetHeight = (int?)tpiObj["TargetHeight"] ?? -1;
+                                    metaBoundingWidth = (int?)tpiObj["BoundingWidth"] ?? -1;
+                                    metaBoundingHeight = (int?)tpiObj["BoundingHeight"] ?? -1;
+                                }
                             }
                         }
                     }
                 }
-            }
-            else if (type == SpriteType.Font && parentMeta != null)
-            {
-                JObject tpiObj = parentMeta["TexturePageItem"] as JObject;
-                if (tpiObj != null)
+                else if (type == SpriteType.Font && parentMeta != null)
                 {
-                    metaTargetX = (int?)tpiObj["TargetX"] ?? -1;
-                    metaTargetY = (int?)tpiObj["TargetY"] ?? -1;
-                    metaTargetWidth = (int?)tpiObj["TargetWidth"] ?? -1;
-                    metaTargetHeight = (int?)tpiObj["TargetHeight"] ?? -1;
-                    metaBoundingWidth = (int?)tpiObj["BoundingWidth"] ?? -1;
-                    metaBoundingHeight = (int?)tpiObj["BoundingHeight"] ?? -1;
-                }
-            }
-
-            if (metaTargetX >= 0 && metaTargetY >= 0 && metaBoundingWidth > 0 && metaBoundingHeight > 0)
-            {
-                ti.TargetX = metaTargetX;
-                ti.TargetY = metaTargetY;
-                ti.BoundingWidth = metaBoundingWidth;
-                ti.BoundingHeight = metaBoundingHeight;
-
-                if (metaTargetWidth > 0 && metaTargetHeight > 0)
-                {
-                    img.Trim();
-                    img.ResetPage();
-                    if ((int)img.Width != metaTargetWidth || (int)img.Height != metaTargetHeight)
+                    JObject tpiObj = parentMeta["TexturePageItem"] as JObject;
+                    if (tpiObj != null)
                     {
-                        img.InterpolativeResize((uint)metaTargetWidth, (uint)metaTargetHeight, PixelInterpolateMethod.Bilinear);
+                        metaTargetX = (int?)tpiObj["TargetX"] ?? -1;
+                        metaTargetY = (int?)tpiObj["TargetY"] ?? -1;
+                        metaTargetWidth = (int?)tpiObj["TargetWidth"] ?? -1;
+                        metaTargetHeight = (int?)tpiObj["TargetHeight"] ?? -1;
+                        metaBoundingWidth = (int?)tpiObj["BoundingWidth"] ?? -1;
+                        metaBoundingHeight = (int?)tpiObj["BoundingHeight"] ?? -1;
                     }
-                    ti.Width = metaTargetWidth;
-                    ti.Height = metaTargetHeight;
+                }
+
+                if (metaTargetX >= 0 && metaTargetY >= 0 && metaBoundingWidth > 0 && metaBoundingHeight > 0)
+                {
+                    ti.TargetX = metaTargetX;
+                    ti.TargetY = metaTargetY;
+                    ti.BoundingWidth = metaBoundingWidth;
+                    ti.BoundingHeight = metaBoundingHeight;
+
+                    if (metaTargetWidth > 0 && metaTargetHeight > 0)
+                    {
+                        img.Trim();
+                        img.ResetPage();
+                        if ((int)img.Width != metaTargetWidth || (int)img.Height != metaTargetHeight)
+                        {
+                            img.InterpolativeResize((uint)metaTargetWidth, (uint)metaTargetHeight, PixelInterpolateMethod.Bilinear);
+                        }
+                        ti.Width = metaTargetWidth;
+                        ti.Height = metaTargetHeight;
+                    }
+                    else
+                    {
+                        img.BorderColor = MagickColors.Transparent;
+                        img.BackgroundColor = MagickColors.Transparent;
+                        img.Border(1);
+                        IMagickGeometry bbox = img.BoundingBox;
+                        if (bbox != null)
+                        {
+                            img.Trim();
+                        }
+                        else
+                        {
+                            img.Crop(1, 1);
+                        }
+                        img.ResetPage();
+                        ti.Width = (int)img.Width;
+                        ti.Height = (int)img.Height;
+                    }
                 }
                 else
                 {
@@ -288,54 +331,43 @@ void ScanGraphicsFolder(string folderPath, SpriteType type, Dictionary<string, J
                     IMagickGeometry bbox = img.BoundingBox;
                     if (bbox != null)
                     {
+                        ti.TargetX = bbox.X - 1; ti.TargetY = bbox.Y - 1;
                         img.Trim();
                     }
                     else
                     {
-                        img.Crop(1, 1);
+                        ti.TargetX = 0; ti.TargetY = 0; img.Crop(1, 1);
                     }
                     img.ResetPage();
-                    ti.Width = (int)img.Width;
-                    ti.Height = (int)img.Height;
+                    ti.Width = (int)img.Width; ti.Height = (int)img.Height;
+                    ti.BoundingWidth = ti.TargetX + ti.Width;
+                    ti.BoundingHeight = ti.TargetY + ti.Height;
                 }
             }
             else
             {
-                img.BorderColor = MagickColors.Transparent;
-                img.BackgroundColor = MagickColors.Transparent;
-                img.Border(1);
-                IMagickGeometry bbox = img.BoundingBox;
-                if (bbox != null) {
-                    ti.TargetX = bbox.X - 1; ti.TargetY = bbox.Y - 1;
-                    img.Trim();
-                } else {
-                    ti.TargetX = 0; ti.TargetY = 0; img.Crop(1, 1);
+                JObject tpiObj = parentMeta?["TexturePageItem"] as JObject;
+                if (tpiObj != null)
+                {
+                    ti.TargetX = (int?)tpiObj["TargetX"] ?? 0;
+                    ti.TargetY = (int?)tpiObj["TargetY"] ?? 0;
+                    ti.BoundingWidth = (int?)tpiObj["BoundingWidth"] ?? ti.Width;
+                    ti.BoundingHeight = (int?)tpiObj["BoundingHeight"] ?? ti.Height;
                 }
-                img.ResetPage();
-                ti.Width = (int)img.Width; ti.Height = (int)img.Height;
-                ti.BoundingWidth = ti.TargetX + ti.Width;
-                ti.BoundingHeight = ti.TargetY + ti.Height;
+                else
+                {
+                    ti.TargetX = 0;
+                    ti.TargetY = 0;
+                    ti.BoundingWidth = ti.Width;
+                    ti.BoundingHeight = ti.Height;
+                }
             }
+            sourceTextures.Add(ti);
         }
-        else
+        catch (Exception ex)
         {
-            JObject tpiObj = parentMeta?["TexturePageItem"] as JObject;
-            if (tpiObj != null)
-            {
-                ti.TargetX = (int?)tpiObj["TargetX"] ?? 0;
-                ti.TargetY = (int?)tpiObj["TargetY"] ?? 0;
-                ti.BoundingWidth = (int?)tpiObj["BoundingWidth"] ?? ti.Width;
-                ti.BoundingHeight = (int?)tpiObj["BoundingHeight"] ?? ti.Height;
-            }
-            else
-            {
-                ti.TargetX = 0;
-                ti.TargetY = 0;
-                ti.BoundingWidth = ti.Width;
-                ti.BoundingHeight = ti.Height;
-            }
+            Console.WriteLine($"[UTMT-IMPORT] Error processing image file '{file}': {ex.Message}");
         }
-        sourceTextures.Add(ti);
     }
 }
 
@@ -354,142 +386,157 @@ if (sourceTextures.Count > 0)
 
     foreach (Atlas atlas in packer.Atlasses)
     {
-        UndertaleEmbeddedTexture embTex = new UndertaleEmbeddedTexture { Name = Data.Strings.MakeString($"Texture {++lastTextPage}") };
-
-        using (MagickImage atlasImg = new MagickImage(MagickColors.Transparent, (uint)atlas.Width, (uint)atlas.Height))
+        try
         {
-            foreach (Node n in atlas.Nodes)
+            UndertaleEmbeddedTexture embTex = new UndertaleEmbeddedTexture { Name = Data.Strings.MakeString($"Texture {++lastTextPage}") };
+
+            using (MagickImage atlasImg = new MagickImage(MagickColors.Transparent, (uint)atlas.Width, (uint)atlas.Height))
             {
-                if (n.Texture == null) continue;
-                using (IMagickImage<byte> resized = TextureWorker.ResizeImage(n.Texture.Image, n.Bounds.Width, n.Bounds.Height))
+                foreach (Node n in atlas.Nodes)
                 {
-                    atlasImg.Composite(resized, n.Bounds.X, n.Bounds.Y, CompositeOperator.Copy);
-                }
-            }
-
-            embTex.TextureData.Image = GMImage.FromMagickImage(atlasImg).ConvertToPng();
-            Data.EmbeddedTextures.Add(embTex);
-
-            if (Data.TextureGroupInfo != null && Data.TextureGroupInfo.Count > 0)
-            {
-                Data.TextureGroupInfo[0].TexturePages.Add(new UndertaleResourceById<UndertaleEmbeddedTexture, UndertaleChunkTXTR>(embTex));
-            }
-
-            foreach (Node n in atlas.Nodes)
-            {
-                if (n.Texture == null) continue;
-
-                UndertaleTexturePageItem tpi = new UndertaleTexturePageItem
-                {
-                    Name = Data.Strings.MakeString($"PageItem {++lastTextPageItem}"),
-                    SourceX = (ushort)n.Bounds.X, SourceY = (ushort)n.Bounds.Y,
-                    SourceWidth = (ushort)n.Bounds.Width, SourceHeight = (ushort)n.Bounds.Height,
-                    TargetX = (ushort)n.Texture.TargetX, TargetY = (ushort)n.Texture.TargetY,
-                    TargetWidth = (ushort)n.Bounds.Width, TargetHeight = (ushort)n.Bounds.Height,
-                    BoundingWidth = (ushort)n.Texture.BoundingWidth,
-                    BoundingHeight = (ushort)n.Texture.BoundingHeight,
-                    TexturePage = embTex
-                };
-                Data.TexturePageItems.Add(tpi);
-
-                if (n.Texture.SType == SpriteType.Background)
-                {
-                    UndertaleBackground bg = Data.Backgrounds.ByName(n.Texture.Name);
-                    if (bg == null) { bg = new UndertaleBackground { Name = Data.Strings.MakeString(n.Texture.Name) }; Data.Backgrounds.Add(bg); }
-                    bg.Texture = tpi;
-                }
-                else if (n.Texture.SType == SpriteType.Font)
-                {
-                    UndertaleFont fnt = Data.Fonts.ByName(n.Texture.Name);
-                    if (fnt == null) { fnt = new UndertaleFont { Name = Data.Strings.MakeString(n.Texture.Name) }; Data.Fonts.Add(fnt); }
-                    fnt.Texture = tpi;
-
-                    string csvPath = Path.Combine(dirFonts, $"glyphs_{n.Texture.Name}.csv");
-                    if (File.Exists(csvPath))
+                    if (n.Texture == null) continue;
+                    using (IMagickImage<byte> resized = TextureWorker.ResizeImage(n.Texture.Image, n.Bounds.Width, n.Bounds.Height))
                     {
-                        string[] lines = File.ReadAllLines(csvPath);
-                        if (lines.Length >= 2)
-                        {
-                            string[] header = lines[0].Split(';');
-                            fnt.DisplayName = Data.Strings.MakeString(header[0]);
-                            fnt.EmSize = uint.Parse(header[1]);
-                            fnt.Bold = bool.Parse(header[2]);
-                            fnt.Italic = bool.Parse(header[3]);
-                            fnt.RangeStart = ushort.Parse(lines[1]);
-
-                            fnt.Glyphs.Clear();
-                            for (int lineIdx = 2; lineIdx < lines.Length; lineIdx++)
-                            {
-                                string[] gData = lines[lineIdx].Split(';');
-                                fnt.Glyphs.Add(new UndertaleFont.Glyph {
-                                    Character = ushort.Parse(gData[0]),
-                                    SourceX = ushort.Parse(gData[1]), SourceY = ushort.Parse(gData[2]),
-                                    SourceWidth = ushort.Parse(gData[3]), SourceHeight = ushort.Parse(gData[4]),
-                                    Shift = short.Parse(gData[5]), Offset = short.Parse(gData[6])
-                                });
-                            }
-                        }
-                    }
-                }
-                else if (n.Texture.SType == SpriteType.Sprite)
-                {
-                    int lastUnderscore = n.Texture.Name.LastIndexOf('_');
-                    if (lastUnderscore > 0)
-                    {
-                        string sprName = n.Texture.Name.Substring(0, lastUnderscore);
-                        if (int.TryParse(n.Texture.Name.Substring(lastUnderscore + 1), out int frame))
-                        {
-                            UndertaleSprite spr = Data.Sprites.ByName(sprName);
-                            if (spr == null) { spr = new UndertaleSprite { Name = Data.Strings.MakeString(sprName) }; Data.Sprites.Add(spr); }
-
-                            while (spr.Textures.Count <= frame)
-                            {
-                                spr.Textures.Add(new UndertaleSprite.TextureEntry());
-                            }
-
-                            if (spr.Textures[frame] == null)
-                            {
-                                spr.Textures.RemoveAt(frame);
-                                spr.Textures.Insert(frame, new UndertaleSprite.TextureEntry { Texture = tpi });
-                            }
-                            else
-                            {
-                                spr.Textures[frame].Texture = tpi;
-                            }
-
-                            string sourceDir = Path.GetDirectoryName(n.Texture.Source);
-                            string metaPath = Path.Combine(sourceDir, "metadata.json");
-
-                            if (File.Exists(metaPath))
-                            {
-                                JObject meta = JObject.Parse(File.ReadAllText(metaPath));
-                                spr.Width = (uint)meta["Width"];
-                                spr.Height = (uint)meta["Height"];
-                                spr.MarginLeft = (int)meta["MarginLeft"];
-                                spr.MarginRight = (int)meta["MarginRight"];
-                                spr.MarginBottom = (int)meta["MarginBottom"];
-                                spr.MarginTop = (int)meta["MarginTop"];
-                                spr.BBoxMode = (uint)meta["BBoxMode"];
-                                spr.SepMasks = (UndertaleSprite.SepMaskType)(int)meta["SepMasks"];
-                                spr.OriginX = (int)meta["OriginX"];
-                                spr.OriginY = (int)meta["OriginY"];
-                                spr.IsSpecialType = (bool)meta["IsSpecialType"];
-                                spr.SVersion = (uint)meta["SVersion"];
-                                spr.GMS2PlaybackSpeed = (float)meta["GMS2PlaybackSpeed"];
-                                spr.GMS2PlaybackSpeedType = (AnimSpeedType)(int)meta["GMS2PlaybackSpeedType"];
-                            }
-                            else
-                            {
-                                spr.Width = Math.Max(spr.Width, tpi.BoundingWidth);
-                                spr.Height = Math.Max(spr.Height, tpi.BoundingHeight);
-                            }
-                            Console.WriteLine($"[UTMT-IMPORT] Imported sprite: {sprName} frame {frame}");
-                        }
+                        atlasImg.Composite(resized, n.Bounds.X, n.Bounds.Y, CompositeOperator.Copy);
                     }
                 }
 
-                n.Texture.Image.Dispose();
+                embTex.TextureData.Image = GMImage.FromMagickImage(atlasImg).ConvertToPng();
+                Data.EmbeddedTextures.Add(embTex);
+
+                if (Data.TextureGroupInfo != null && Data.TextureGroupInfo.Count > 0)
+                {
+                    Data.TextureGroupInfo[0].TexturePages.Add(new UndertaleResourceById<UndertaleEmbeddedTexture, UndertaleChunkTXTR>(embTex));
+                }
+
+                foreach (Node n in atlas.Nodes)
+                {
+                    if (n.Texture == null) continue;
+
+                    UndertaleTexturePageItem tpi = new UndertaleTexturePageItem
+                    {
+                        Name = Data.Strings.MakeString($"PageItem {++lastTextPageItem}"),
+                        SourceX = (ushort)n.Bounds.X,
+                        SourceY = (ushort)n.Bounds.Y,
+                        SourceWidth = (ushort)n.Bounds.Width,
+                        SourceHeight = (ushort)n.Bounds.Height,
+                        TargetX = (ushort)n.Texture.TargetX,
+                        TargetY = (ushort)n.Texture.TargetY,
+                        TargetWidth = (ushort)n.Bounds.Width,
+                        TargetHeight = (ushort)n.Bounds.Height,
+                        BoundingWidth = (ushort)n.Texture.BoundingWidth,
+                        BoundingHeight = (ushort)n.Texture.BoundingHeight,
+                        TexturePage = embTex
+                    };
+                    Data.TexturePageItems.Add(tpi);
+
+                    if (n.Texture.SType == SpriteType.Background)
+                    {
+                        UndertaleBackground bg = Data.Backgrounds.ByName(n.Texture.Name);
+                        if (bg == null) { bg = new UndertaleBackground { Name = Data.Strings.MakeString(n.Texture.Name) }; Data.Backgrounds.Add(bg); }
+                        bg.Texture = tpi;
+                    }
+                    else if (n.Texture.SType == SpriteType.Font)
+                    {
+                        UndertaleFont fnt = Data.Fonts.ByName(n.Texture.Name);
+                        if (fnt == null) { fnt = new UndertaleFont { Name = Data.Strings.MakeString(n.Texture.Name) }; Data.Fonts.Add(fnt); }
+                        fnt.Texture = tpi;
+
+                        string csvPath = Path.Combine(dirFonts, $"glyphs_{n.Texture.Name}.csv");
+                        if (File.Exists(csvPath))
+                        {
+                            string[] lines = File.ReadAllLines(csvPath);
+                            if (lines.Length >= 2)
+                            {
+                                string[] header = lines[0].Split(';');
+                                fnt.DisplayName = Data.Strings.MakeString(header[0]);
+                                fnt.EmSize = uint.Parse(header[1]);
+                                fnt.Bold = bool.Parse(header[2]);
+                                fnt.Italic = bool.Parse(header[3]);
+                                fnt.RangeStart = ushort.Parse(lines[1]);
+
+                                fnt.Glyphs.Clear();
+                                for (int lineIdx = 2; lineIdx < lines.Length; lineIdx++)
+                                {
+                                    string[] gData = lines[lineIdx].Split(';');
+                                    fnt.Glyphs.Add(new UndertaleFont.Glyph
+                                    {
+                                        Character = ushort.Parse(gData[0]),
+                                        SourceX = ushort.Parse(gData[1]),
+                                        SourceY = ushort.Parse(gData[2]),
+                                        SourceWidth = ushort.Parse(gData[3]),
+                                        SourceHeight = ushort.Parse(gData[4]),
+                                        Shift = short.Parse(gData[5]),
+                                        Offset = short.Parse(gData[6])
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    else if (n.Texture.SType == SpriteType.Sprite)
+                    {
+                        int lastUnderscore = n.Texture.Name.LastIndexOf('_');
+                        if (lastUnderscore > 0)
+                        {
+                            string sprName = n.Texture.Name.Substring(0, lastUnderscore);
+                            if (int.TryParse(n.Texture.Name.Substring(lastUnderscore + 1), out int frame))
+                            {
+                                UndertaleSprite spr = Data.Sprites.ByName(sprName);
+                                if (spr == null) { spr = new UndertaleSprite { Name = Data.Strings.MakeString(sprName) }; Data.Sprites.Add(spr); }
+
+                                while (spr.Textures.Count <= frame)
+                                {
+                                    spr.Textures.Add(new UndertaleSprite.TextureEntry());
+                                }
+
+                                if (spr.Textures[frame] == null)
+                                {
+                                    spr.Textures.RemoveAt(frame);
+                                    spr.Textures.Insert(frame, new UndertaleSprite.TextureEntry { Texture = tpi });
+                                }
+                                else
+                                {
+                                    spr.Textures[frame].Texture = tpi;
+                                }
+
+                                string sourceDir = Path.GetDirectoryName(n.Texture.Source);
+                                string metaPath = Path.Combine(sourceDir, "metadata.json");
+
+                                if (File.Exists(metaPath))
+                                {
+                                    JObject meta = JObject.Parse(File.ReadAllText(metaPath));
+                                    spr.Width = (uint)meta["Width"];
+                                    spr.Height = (uint)meta["Height"];
+                                    spr.MarginLeft = (int)meta["MarginLeft"];
+                                    spr.MarginRight = (int)meta["MarginRight"];
+                                    spr.MarginBottom = (int)meta["MarginBottom"];
+                                    spr.MarginTop = (int)meta["MarginTop"];
+                                    spr.BBoxMode = (uint)meta["BBoxMode"];
+                                    spr.SepMasks = (UndertaleSprite.SepMaskType)(int)meta["SepMasks"];
+                                    spr.OriginX = (int)meta["OriginX"];
+                                    spr.OriginY = (int)meta["OriginY"];
+                                    spr.IsSpecialType = (bool)meta["IsSpecialType"];
+                                    spr.SVersion = (uint)meta["SVersion"];
+                                    spr.GMS2PlaybackSpeed = (float)meta["GMS2PlaybackSpeed"];
+                                    spr.GMS2PlaybackSpeedType = (AnimSpeedType)(int)meta["GMS2PlaybackSpeedType"];
+                                }
+                                else
+                                {
+                                    spr.Width = Math.Max(spr.Width, tpi.BoundingWidth);
+                                    spr.Height = Math.Max(spr.Height, tpi.BoundingHeight);
+                                }
+                                Console.WriteLine($"[UTMT-IMPORT] Imported sprite: {sprName} frame {frame}");
+                            }
+                        }
+                    }
+
+                    n.Texture.Image.Dispose();
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[UTMT-IMPORT] Error processing atlas: {ex.Message}");
         }
     }
 }
@@ -589,13 +636,15 @@ ScriptMessage("Import complete! All assets integrated successfully.");
 public enum SpriteType { Sprite, Background, Font }
 public class TextureInfo { public string Source; public string Name; public int Width; public int Height; public int TargetX; public int TargetY; public int BoundingWidth; public int BoundingHeight; public SpriteType SType; public MagickImage Image; }
 public class Rect { public int X; public int Y; public int Width; public int Height; public int Right { get { return X + Width; } } public int Down { get { return Y + Height; } } public int Area { get { return Width * Height; } } }
-public class Split : Rect {
+public class Split : Rect
+{
     public bool Invalidated = false;
     public Split(int x, int y, int w, int h) { X = x; Y = y; Width = w; Height = h; }
     public bool containsRect(Rect r) { return (r.X >= X) && (r.Y >= Y) && (Right >= r.Right) && (Down >= r.Down); }
     public bool overlapsRect(Rect r) { return (((r.X >= X) && (r.X <= Right)) || ((X >= r.X) && (X <= r.Right))) && (((r.Y >= Y) && (r.Y <= Down)) || ((Y >= r.Y) && (Y <= r.Down))); }
     public bool fits(int w, int h) { return (Width >= w) && (Height >= h); }
-    public IEnumerable<Split> splitNode(Rect r) {
+    public IEnumerable<Split> splitNode(Rect r)
+    {
         if (!overlapsRect(r) || Invalidated) return new List<Split>();
         Invalidated = true;
         return new List<Split> {
@@ -606,16 +655,20 @@ public class Split : Rect {
 }
 public class Node { public Rect Bounds; public TextureInfo Texture; }
 public class Atlas { public int Width; public int Height; public List<Node> Nodes = new List<Node>(); }
-public class Packer {
+public class Packer
+{
     public List<TextureInfo> SourceTextures; public int Padding; public int AtlasSize; public List<Atlas> Atlasses = new List<Atlas>();
-    public void Process() {
+    public void Process()
+    {
         List<TextureInfo> textures = SourceTextures.OrderByDescending(t => t.Width * t.Height).ToList();
-        while (textures.Count > 0) {
+        while (textures.Count > 0)
+        {
             Atlas atlas = new Atlas { Width = AtlasSize, Height = AtlasSize };
             List<Split> splits = new List<Split> { new Split(0, 0, AtlasSize, AtlasSize) };
             List<TextureInfo> leftovers = new List<TextureInfo>();
 
-            foreach (var tex in textures) {
+            foreach (var tex in textures)
+            {
                 int pW = tex.Width + (Padding * 2); int pH = tex.Height + (Padding * 2);
                 Split bestFit = splits.Where(s => s.fits(pW, pH)).OrderBy(s => Math.Max(s.Width - pW, s.Height - pH)).FirstOrDefault();
 

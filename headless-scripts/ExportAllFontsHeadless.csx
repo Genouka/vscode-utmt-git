@@ -27,71 +27,78 @@ try
     int exported = 0;
     foreach (var fnt in Data.Fonts)
     {
-        if (fnt == null || fnt.Name == null) continue;
-
-        string fontName = fnt.Name.Content;
-        string fontDir = Path.Combine(outputDir, fontName);
-        Directory.CreateDirectory(fontDir);
-
-        object texturePageItem = null;
-        if (fnt.Texture != null)
+        try
         {
-            texturePageItem = new
+            if (fnt == null || fnt.Name == null) continue;
+
+            string fontName = fnt.Name.Content;
+            string fontDir = Path.Combine(outputDir, fontName);
+            Directory.CreateDirectory(fontDir);
+
+            object texturePageItem = null;
+            if (fnt.Texture != null)
             {
-                TargetX = fnt.Texture.TargetX,
-                TargetY = fnt.Texture.TargetY,
-                TargetWidth = fnt.Texture.TargetWidth,
-                TargetHeight = fnt.Texture.TargetHeight,
-                BoundingWidth = fnt.Texture.BoundingWidth,
-                BoundingHeight = fnt.Texture.BoundingHeight
-            };
-        }
-
-        var metadata = new
-        {
-            Name = fontName,
-            DisplayName = fnt.DisplayName?.Content,
-            EmSize = fnt.EmSize,
-            Bold = fnt.Bold,
-            Italic = fnt.Italic,
-            RangeStart = fnt.RangeStart,
-            RangeEnd = fnt.RangeEnd,
-            Charset = fnt.Charset,
-            AntiAliasing = fnt.AntiAliasing,
-            ScaleX = fnt.ScaleX,
-            ScaleY = fnt.ScaleY,
-            AscenderOffset = fnt.AscenderOffset,
-            Ascender = fnt.Ascender,
-            SDFSpread = fnt.SDFSpread,
-            LineHeight = fnt.LineHeight,
-            TexturePageItem = texturePageItem
-        };
-
-        string jsonOutput = JsonConvert.SerializeObject(metadata, Formatting.Indented);
-        File.WriteAllText(Path.Combine(fontDir, "metadata.json"), jsonOutput);
-
-        if (fnt.Texture != null)
-        {
-            string fileName = $"{fontName}_0.png";
-            worker.ExportAsPNG(fnt.Texture, Path.Combine(fontDir, fileName), null, true);
-        }
-
-        if (fnt.Glyphs != null && fnt.Glyphs.Count > 0)
-        {
-            var csvLines = new List<string>();
-            csvLines.Add($"{fnt.DisplayName?.Content ?? fontName};{fnt.EmSize};{fnt.Bold};{fnt.Italic}");
-            csvLines.Add(fnt.RangeStart.ToString());
-
-            foreach (var glyph in fnt.Glyphs)
-            {
-                csvLines.Add($"{glyph.Character};{glyph.SourceX};{glyph.SourceY};{glyph.SourceWidth};{glyph.SourceHeight};{glyph.Shift};{glyph.Offset}");
+                texturePageItem = new
+                {
+                    TargetX = fnt.Texture.TargetX,
+                    TargetY = fnt.Texture.TargetY,
+                    TargetWidth = fnt.Texture.TargetWidth,
+                    TargetHeight = fnt.Texture.TargetHeight,
+                    BoundingWidth = fnt.Texture.BoundingWidth,
+                    BoundingHeight = fnt.Texture.BoundingHeight
+                };
             }
 
-            File.WriteAllText(Path.Combine(fontDir, $"glyphs_{fontName}.csv"), string.Join("\n", csvLines));
-        }
+            var metadata = new
+            {
+                Name = fontName,
+                DisplayName = fnt.DisplayName?.Content,
+                EmSize = fnt.EmSize,
+                Bold = fnt.Bold,
+                Italic = fnt.Italic,
+                RangeStart = fnt.RangeStart,
+                RangeEnd = fnt.RangeEnd,
+                Charset = fnt.Charset,
+                AntiAliasing = fnt.AntiAliasing,
+                ScaleX = fnt.ScaleX,
+                ScaleY = fnt.ScaleY,
+                AscenderOffset = fnt.AscenderOffset,
+                Ascender = fnt.Ascender,
+                SDFSpread = fnt.SDFSpread,
+                LineHeight = fnt.LineHeight,
+                TexturePageItem = texturePageItem
+            };
 
-        exported++;
-        Console.WriteLine($"[UTMT-EXPORT-FONTS] Exported: {fontName} ({fnt.Glyphs?.Count ?? 0} glyphs)");
+            string jsonOutput = JsonConvert.SerializeObject(metadata, Formatting.Indented);
+            File.WriteAllText(Path.Combine(fontDir, "metadata.json"), jsonOutput);
+
+            if (fnt.Texture != null)
+            {
+                string fileName = $"{fontName}_0.png";
+                worker.ExportAsPNG(fnt.Texture, Path.Combine(fontDir, fileName), null, true);
+            }
+
+            if (fnt.Glyphs != null && fnt.Glyphs.Count > 0)
+            {
+                var csvLines = new List<string>();
+                csvLines.Add($"{fnt.DisplayName?.Content ?? fontName};{fnt.EmSize};{fnt.Bold};{fnt.Italic}");
+                csvLines.Add(fnt.RangeStart.ToString());
+
+                foreach (var glyph in fnt.Glyphs)
+                {
+                    csvLines.Add($"{glyph.Character};{glyph.SourceX};{glyph.SourceY};{glyph.SourceWidth};{glyph.SourceHeight};{glyph.Shift};{glyph.Offset}");
+                }
+
+                File.WriteAllText(Path.Combine(fontDir, $"glyphs_{fontName}.csv"), string.Join("\n", csvLines));
+            }
+
+            exported++;
+            Console.WriteLine($"[UTMT-EXPORT-FONTS] Exported: {fontName} ({fnt.Glyphs?.Count ?? 0} glyphs)");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"[UTMT-EXPORT-FONTS] Error exporting font: {fnt?.Name?.Content ?? "null"} - {e.Message}");
+        }
     }
 
     Console.WriteLine($"[UTMT-EXPORT-FONTS] Complete! Exported {exported} fonts.");

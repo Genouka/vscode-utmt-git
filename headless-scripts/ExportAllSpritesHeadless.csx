@@ -27,68 +27,74 @@ try
     int exported = 0;
     foreach (var spr in Data.Sprites)
     {
-        if (spr == null || spr.Name == null) continue;
-
-        string spriteName = spr.Name.Content;
-        string spriteDir = Path.Combine(outputDir, spriteName);
-        Directory.CreateDirectory(spriteDir);
-
-        var texturePageItems = new List<object>();
-        for (int i = 0; i < spr.Textures.Count; i++)
+        try
         {
-            if (spr.Textures[i]?.Texture != null)
+            if (spr == null || spr.Name == null) continue;
+            string spriteName = spr.Name.Content;
+            string spriteDir = Path.Combine(outputDir, spriteName);
+            Directory.CreateDirectory(spriteDir);
+
+            var texturePageItems = new List<object>();
+            for (int i = 0; i < spr.Textures.Count; i++)
             {
-                var tpi = spr.Textures[i].Texture;
-                texturePageItems.Add(new
+                if (spr.Textures[i]?.Texture != null)
                 {
-                    TargetX = tpi.TargetX,
-                    TargetY = tpi.TargetY,
-                    TargetWidth = tpi.TargetWidth,
-                    TargetHeight = tpi.TargetHeight,
-                    BoundingWidth = tpi.BoundingWidth,
-                    BoundingHeight = tpi.BoundingHeight
-                });
+                    var tpi = spr.Textures[i].Texture;
+                    texturePageItems.Add(new
+                    {
+                        TargetX = tpi.TargetX,
+                        TargetY = tpi.TargetY,
+                        TargetWidth = tpi.TargetWidth,
+                        TargetHeight = tpi.TargetHeight,
+                        BoundingWidth = tpi.BoundingWidth,
+                        BoundingHeight = tpi.BoundingHeight
+                    });
+                }
+                else
+                {
+                    texturePageItems.Add(null);
+                }
             }
-            else
+
+            var metadata = new
             {
-                texturePageItems.Add(null);
-            }
-        }
+                Name = spriteName,
+                Width = spr.Width,
+                Height = spr.Height,
+                MarginLeft = spr.MarginLeft,
+                MarginRight = spr.MarginRight,
+                MarginBottom = spr.MarginBottom,
+                MarginTop = spr.MarginTop,
+                BBoxMode = spr.BBoxMode,
+                SepMasks = (int)spr.SepMasks,
+                OriginX = spr.OriginX,
+                OriginY = spr.OriginY,
+                IsSpecialType = spr.IsSpecialType,
+                SVersion = spr.SVersion,
+                GMS2PlaybackSpeed = spr.GMS2PlaybackSpeed,
+                GMS2PlaybackSpeedType = (int)spr.GMS2PlaybackSpeedType,
+                TexturePageItems = texturePageItems
+            };
 
-        var metadata = new
-        {
-            Name = spriteName,
-            Width = spr.Width,
-            Height = spr.Height,
-            MarginLeft = spr.MarginLeft,
-            MarginRight = spr.MarginRight,
-            MarginBottom = spr.MarginBottom,
-            MarginTop = spr.MarginTop,
-            BBoxMode = spr.BBoxMode,
-            SepMasks = (int)spr.SepMasks,
-            OriginX = spr.OriginX,
-            OriginY = spr.OriginY,
-            IsSpecialType = spr.IsSpecialType,
-            SVersion = spr.SVersion,
-            GMS2PlaybackSpeed = spr.GMS2PlaybackSpeed,
-            GMS2PlaybackSpeedType = (int)spr.GMS2PlaybackSpeedType,
-            TexturePageItems = texturePageItems
-        };
+            string jsonOutput = JsonConvert.SerializeObject(metadata, Formatting.Indented);
+            File.WriteAllText(Path.Combine(spriteDir, "metadata.json"), jsonOutput);
 
-        string jsonOutput = JsonConvert.SerializeObject(metadata, Formatting.Indented);
-        File.WriteAllText(Path.Combine(spriteDir, "metadata.json"), jsonOutput);
-
-        for (int i = 0; i < spr.Textures.Count; i++)
-        {
-            if (spr.Textures[i]?.Texture != null)
+            for (int i = 0; i < spr.Textures.Count; i++)
             {
-                string fileName = $"{spriteName}_{i}.png";
-                worker.ExportAsPNG(spr.Textures[i].Texture, Path.Combine(spriteDir, fileName), null, true);
+                if (spr.Textures[i]?.Texture != null)
+                {
+                    string fileName = $"{spriteName}_{i}.png";
+                    worker.ExportAsPNG(spr.Textures[i].Texture, Path.Combine(spriteDir, fileName), null, true);
+                }
             }
-        }
 
-        exported++;
-        Console.WriteLine($"[UTMT-EXPORT-SPRITES] Exported: {spriteName} ({spr.Textures.Count} frames)");
+            exported++;
+            Console.WriteLine($"[UTMT-EXPORT-SPRITES] Exported: {spriteName} ({spr.Textures.Count} frames)");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[UTMT-EXPORT-SPRITES] Error exporting sprite: {spr?.Name?.Content ?? "null"} - {ex.Message}");
+        }
     }
 
     Console.WriteLine($"[UTMT-EXPORT-SPRITES] Complete! Exported {exported} sprites.");
