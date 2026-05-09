@@ -10,9 +10,10 @@ export interface AssetDirs {
     objects: string;
     backgrounds: string;
     fonts: string;
+    rooms: string;
 }
 
-export type AssetType = 'code' | 'sprites' | 'sounds' | 'objects' | 'backgrounds' | 'fonts';
+export type AssetType = 'code' | 'sprites' | 'sounds' | 'objects' | 'backgrounds' | 'fonts' | 'rooms';
 
 export interface AssetEntry {
     type: AssetType;
@@ -28,6 +29,7 @@ export const ASSET_TYPE_LABELS: Record<AssetType, string> = {
     objects: '对象',
     backgrounds: '背景',
     fonts: '字体',
+    rooms: '房间',
 };
 
 export const ASSET_TYPE_ICONS: Record<AssetType, string> = {
@@ -37,6 +39,7 @@ export const ASSET_TYPE_ICONS: Record<AssetType, string> = {
     objects: 'file-code',
     backgrounds: 'file-media',
     fonts: 'file-media',
+    rooms: 'symbol-structure',
 };
 
 export const DEFAULT_ASSET_DIRS: AssetDirs = {
@@ -46,6 +49,7 @@ export const DEFAULT_ASSET_DIRS: AssetDirs = {
     objects: 'objects',
     backgrounds: 'backgrounds',
     fonts: 'fonts',
+    rooms: 'rooms',
 };
 
 export const CONFIG_FILE_NAME = '.utmt-git.json';

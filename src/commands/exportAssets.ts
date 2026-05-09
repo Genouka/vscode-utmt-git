@@ -13,6 +13,7 @@ const ASSET_TYPE_NAMES: Record<AssetType, string> = {
     objects: '对象',
     backgrounds: '背景',
     fonts: '字体',
+    rooms: '房间',
 };
 
 export function registerExportAssets(
@@ -27,6 +28,7 @@ export function registerExportAssets(
     registerExportObjects(context, projectService, cliService, logger);
     registerExportBackgrounds(context, projectService, cliService, logger);
     registerExportFonts(context, projectService, cliService, logger);
+    registerExportRooms(context, projectService, cliService, logger);
     registerExportAll(context, projectService, cliService, logger);
 }
 
@@ -102,6 +104,18 @@ function registerExportFonts(
     context.subscriptions.push(disposable);
 }
 
+function registerExportRooms(
+    context: vscode.ExtensionContext,
+    projectService: ProjectService,
+    cliService: CliService,
+    logger: Logger
+): void {
+    const disposable = vscode.commands.registerCommand('vscode-utmt-git.exportRooms', async () => {
+        await exportAssetType(projectService, cliService, logger, 'rooms');
+    });
+    context.subscriptions.push(disposable);
+}
+
 function registerExportAll(
     context: vscode.ExtensionContext,
     projectService: ProjectService,
@@ -115,7 +129,7 @@ function registerExportAll(
                 return;
             }
 
-            const types: AssetType[] = ['code', 'sprites', 'sounds', 'objects', 'backgrounds', 'fonts'];
+            const types: AssetType[] = ['code', 'sprites', 'sounds', 'objects', 'backgrounds', 'fonts', 'rooms'];
 
             await vscode.window.withProgress(
                 {

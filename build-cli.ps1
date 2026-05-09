@@ -1,3 +1,6 @@
+Write-Host "Dont build CLI because it is not needed" -ForegroundColor Green
+exit 0
+
 param(
     [string[]]$Platforms = @("win-x64"),
     [string]$Configuration = "Release",

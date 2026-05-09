@@ -67,6 +67,11 @@
         "category": "UTMT Git"
       },
       {
+        "command": "vscode-utmt-git.exportRooms",
+        "title": "UTMT Git: 导出房间",
+        "category": "UTMT Git"
+      },
+      {
         "command": "vscode-utmt-git.exportAll",
         "title": "UTMT Git: 导出所有资产",
         "category": "UTMT Git",
@@ -220,6 +225,11 @@
           "group": "inline@1"
         },
         {
+          "command": "vscode-utmt-git.exportRooms",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == assetType-rooms",
+          "group": "inline@1"
+        },
+        {
           "command": "vscode-utmt-git.openAsset",
           "when": "view == vscode-utmt-git.assetExplorer && viewItem =~ /^asset-file-/",
           "group": "inline"
@@ -240,6 +250,16 @@
           "group": "inline"
         },
         {
+          "command": "vscode-utmt-git.openAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-room-dir",
+          "group": "inline"
+        },
+        {
+          "command": "vscode-utmt-git.openAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-room-json",
+          "group": "inline"
+        },
+        {
           "command": "vscode-utmt-git.renameAsset",
           "when": "view == vscode-utmt-git.assetExplorer && viewItem =~ /^asset-file-/",
           "group": "7_modification@1"
@@ -252,6 +272,16 @@
         {
           "command": "vscode-utmt-git.renameAsset",
           "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-sound-dir",
+          "group": "7_modification@1"
+        },
+        {
+          "command": "vscode-utmt-git.renameAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-room-dir",
+          "group": "7_modification@1"
+        },
+        {
+          "command": "vscode-utmt-git.renameAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-room-json",
           "group": "7_modification@1"
         },
         {
@@ -272,6 +302,16 @@
         {
           "command": "vscode-utmt-git.deleteAsset",
           "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-sound-dir",
+          "group": "7_modification@9"
+        },
+        {
+          "command": "vscode-utmt-git.deleteAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-room-dir",
+          "group": "7_modification@9"
+        },
+        {
+          "command": "vscode-utmt-git.deleteAsset",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-room-json",
           "group": "7_modification@9"
         },
         {
@@ -302,6 +342,16 @@
         {
           "command": "vscode-utmt-git.copyPath",
           "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-sound-dir",
+          "group": "9_cutcopypaste"
+        },
+        {
+          "command": "vscode-utmt-git.copyPath",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-room-dir",
+          "group": "9_cutcopypaste"
+        },
+        {
+          "command": "vscode-utmt-git.copyPath",
+          "when": "view == vscode-utmt-git.assetExplorer && viewItem == asset-room-json",
           "group": "9_cutcopypaste"
         },
         {

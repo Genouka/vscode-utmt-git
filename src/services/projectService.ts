@@ -74,7 +74,7 @@ export class ProjectService implements vscode.Disposable {
 
     private getAssetDirsMap(): Record<AssetType, string> {
         const result = {} as Record<AssetType, string>;
-        const types: AssetType[] = ['code', 'sprites', 'sounds', 'objects', 'backgrounds', 'fonts'];
+        const types: AssetType[] = ['code', 'sprites', 'sounds', 'objects', 'backgrounds', 'fonts', 'rooms'];
         for (const type of types) {
             result[type] = this.config?.assetDirs[type] ?? DEFAULT_ASSET_DIRS[type];
         }

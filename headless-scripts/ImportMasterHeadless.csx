@@ -608,6 +608,402 @@ if (!string.IsNullOrEmpty(objectsDir))
     }
 }
 
+/* ROOMS */
+Console.WriteLine($"[UTMT-IMPORT] Phase: Rooms");
+string roomsDir = GetFolderCI(repoDir, "rooms");
+if (!string.IsNullOrEmpty(roomsDir))
+{
+    string[] roomDirs = Directory.GetDirectories(roomsDir);
+    Console.WriteLine($"[UTMT-IMPORT] Found {roomDirs.Length} room directories");
+
+    foreach (string roomDirPath in roomDirs)
+    {
+        try
+        {
+            string metaPath = Path.Combine(roomDirPath, "metadata.json");
+            if (!File.Exists(metaPath)) continue;
+
+            JObject roomJson = JObject.Parse(File.ReadAllText(metaPath));
+            string roomName = (string)roomJson["Name"];
+            if (string.IsNullOrEmpty(roomName)) continue;
+
+            UndertaleRoom room = Data.Rooms.ByName(roomName);
+            if (room == null)
+            {
+                room = new UndertaleRoom { Name = Data.Strings.MakeString(roomName) };
+                Data.Rooms.Add(room);
+            }
+
+            room.Caption = (roomJson["Caption"] != null && roomJson["Caption"].Type != JTokenType.Null)
+                ? Data.Strings.MakeString((string)roomJson["Caption"]) : null;
+            room.Width = (uint?)roomJson["Width"] ?? 320;
+            room.Height = (uint?)roomJson["Height"] ?? 240;
+            room.Speed = (uint?)roomJson["Speed"] ?? 30;
+            room.Persistent = (bool?)roomJson["Persistent"] ?? false;
+            room.BackgroundColor = (uint?)roomJson["BackgroundColor"] ?? 0;
+            room.DrawBackgroundColor = (bool?)roomJson["DrawBackgroundColor"] ?? true;
+
+            string creationCodeName = (string)roomJson["CreationCodeId"];
+            if (!string.IsNullOrEmpty(creationCodeName))
+                room.CreationCodeId = Data.Code.ByName(creationCodeName);
+            else
+                room.CreationCodeId = null;
+
+            room.Flags = (UndertaleRoom.RoomEntryFlags)((uint?)roomJson["Flags"] ?? 1);
+            room.World = (bool?)roomJson["World"] ?? false;
+            room.Top = (uint?)roomJson["Top"] ?? 0;
+            room.Left = (uint?)roomJson["Left"] ?? 0;
+            room.Right = (uint?)roomJson["Right"] ?? 1024;
+            room.Bottom = (uint?)roomJson["Bottom"] ?? 768;
+            room.GravityX = (float?)roomJson["GravityX"] ?? 0;
+            room.GravityY = (float?)roomJson["GravityY"] ?? 10;
+            room.MetersPerPixel = (float?)roomJson["MetersPerPixel"] ?? 0.1f;
+
+            room.Backgrounds.Clear();
+            JArray bgArray = roomJson["Backgrounds"] as JArray;
+            if (bgArray != null)
+            {
+                foreach (JToken bgToken in bgArray)
+                {
+                    var bgEntry = new UndertaleRoom.Background();
+                    bgEntry.Enabled = (bool?)bgToken["Enabled"] ?? false;
+                    bgEntry.Foreground = (bool?)bgToken["Foreground"] ?? false;
+                    string bgDefName = (string)bgToken["BackgroundDefinition"];
+                    bgEntry.BackgroundDefinition = !string.IsNullOrEmpty(bgDefName) ? Data.Backgrounds.ByName(bgDefName) : null;
+                    bgEntry.X = (int?)bgToken["X"] ?? 0;
+                    bgEntry.Y = (int?)bgToken["Y"] ?? 0;
+                    bgEntry.TiledHorizontally = (bool?)bgToken["TiledHorizontally"] ?? false;
+                    bgEntry.TiledVertically = (bool?)bgToken["TiledVertically"] ?? false;
+                    bgEntry.SpeedX = (int?)bgToken["SpeedX"] ?? 0;
+                    bgEntry.SpeedY = (int?)bgToken["SpeedY"] ?? 0;
+                    bgEntry.Stretch = (bool?)bgToken["Stretch"] ?? false;
+                    bgEntry.ParentRoom = room;
+                    room.Backgrounds.Add(bgEntry);
+                }
+            }
+
+            room.Views.Clear();
+            JArray viewArray = roomJson["Views"] as JArray;
+            if (viewArray != null)
+            {
+                foreach (JToken viewToken in viewArray)
+                {
+                    var viewEntry = new UndertaleRoom.View();
+                    viewEntry.Enabled = (bool?)viewToken["Enabled"] ?? false;
+                    viewEntry.ViewX = (int?)viewToken["ViewX"] ?? 0;
+                    viewEntry.ViewY = (int?)viewToken["ViewY"] ?? 0;
+                    viewEntry.ViewWidth = (int?)viewToken["ViewWidth"] ?? 640;
+                    viewEntry.ViewHeight = (int?)viewToken["ViewHeight"] ?? 480;
+                    viewEntry.PortX = (int?)viewToken["PortX"] ?? 0;
+                    viewEntry.PortY = (int?)viewToken["PortY"] ?? 0;
+                    viewEntry.PortWidth = (int?)viewToken["PortWidth"] ?? 640;
+                    viewEntry.PortHeight = (int?)viewToken["PortHeight"] ?? 480;
+                    viewEntry.BorderX = (uint?)viewToken["BorderX"] ?? 32;
+                    viewEntry.BorderY = (uint?)viewToken["BorderY"] ?? 32;
+                    viewEntry.SpeedX = (int?)viewToken["SpeedX"] ?? -1;
+                    viewEntry.SpeedY = (int?)viewToken["SpeedY"] ?? -1;
+                    string viewObjName = (string)viewToken["ObjectId"];
+                    viewEntry.ObjectId = !string.IsNullOrEmpty(viewObjName) ? Data.GameObjects.ByName(viewObjName) : null;
+                    room.Views.Add(viewEntry);
+                }
+            }
+
+            room.GameObjects.Clear();
+            JArray objArray = roomJson["GameObjects"] as JArray;
+            if (objArray != null)
+            {
+                foreach (JToken objToken in objArray)
+                {
+                    var gameObj = new UndertaleRoom.GameObject();
+                    gameObj.X = (int?)objToken["X"] ?? 0;
+                    gameObj.Y = (int?)objToken["Y"] ?? 0;
+                    string objDefName = (string)objToken["ObjectDefinition"];
+                    gameObj.ObjectDefinition = !string.IsNullOrEmpty(objDefName) ? Data.GameObjects.ByName(objDefName) : null;
+                    gameObj.InstanceID = (uint?)objToken["InstanceID"] ?? 0;
+                    string ccName = (string)objToken["CreationCode"];
+                    gameObj.CreationCode = !string.IsNullOrEmpty(ccName) ? Data.Code.ByName(ccName) : null;
+                    gameObj.ScaleX = (float?)objToken["ScaleX"] ?? 1;
+                    gameObj.ScaleY = (float?)objToken["ScaleY"] ?? 1;
+                    gameObj.Color = (uint?)objToken["Color"] ?? 0xFFFFFFFF;
+                    gameObj.Rotation = (float?)objToken["Rotation"] ?? 0;
+                    string preCreateName = (string)objToken["PreCreateCode"];
+                    gameObj.PreCreateCode = !string.IsNullOrEmpty(preCreateName) ? Data.Code.ByName(preCreateName) : null;
+                    gameObj.ImageSpeed = (float?)objToken["ImageSpeed"] ?? 0;
+                    gameObj.ImageIndex = (int?)objToken["ImageIndex"] ?? 0;
+                    room.GameObjects.Add(gameObj);
+                }
+            }
+
+            room.Tiles.Clear();
+            JArray tileArray = roomJson["Tiles"] as JArray;
+            if (tileArray != null)
+            {
+                foreach (JToken tileToken in tileArray)
+                {
+                    var tile = new UndertaleRoom.Tile();
+                    tile.X = (int?)tileToken["X"] ?? 0;
+                    tile.Y = (int?)tileToken["Y"] ?? 0;
+                    tile.spriteMode = (bool?)tileToken["SpriteMode"] ?? false;
+                    if (tile.spriteMode)
+                    {
+                        string sprDefName = (string)tileToken["SpriteDefinition"];
+                        tile.SpriteDefinition = !string.IsNullOrEmpty(sprDefName) ? Data.Sprites.ByName(sprDefName) : null;
+                    }
+                    else
+                    {
+                        string bgDefName2 = (string)tileToken["BackgroundDefinition"];
+                        tile.BackgroundDefinition = !string.IsNullOrEmpty(bgDefName2) ? Data.Backgrounds.ByName(bgDefName2) : null;
+                    }
+                    tile.SourceX = (int?)tileToken["SourceX"] ?? 0;
+                    tile.SourceY = (int?)tileToken["SourceY"] ?? 0;
+                    tile.Width = (uint?)tileToken["Width"] ?? 0;
+                    tile.Height = (uint?)tileToken["Height"] ?? 0;
+                    tile.TileDepth = (int?)tileToken["TileDepth"] ?? 0;
+                    tile.InstanceID = (uint?)tileToken["InstanceID"] ?? 0;
+                    tile.ScaleX = (float?)tileToken["ScaleX"] ?? 1;
+                    tile.ScaleY = (float?)tileToken["ScaleY"] ?? 1;
+                    tile.Color = (uint?)tileToken["Color"] ?? 0xFFFFFFFF;
+                    room.Tiles.Add(tile);
+                }
+            }
+
+            room.Layers.Clear();
+            JArray layerArray = roomJson["Layers"] as JArray;
+            if (layerArray != null)
+            {
+                foreach (JToken layerToken in layerArray)
+                {
+                    var layer = new UndertaleRoom.Layer();
+                    layer.ParentRoom = room;
+                    layer.LayerName = Data.Strings.MakeString((string)layerToken["LayerName"]);
+                    layer.LayerId = (uint?)layerToken["LayerId"] ?? 0;
+                    layer.LayerType = (UndertaleRoom.LayerType)((int?)layerToken["LayerType"] ?? 0);
+                    layer.LayerDepth = (int?)layerToken["LayerDepth"] ?? 0;
+                    layer.XOffset = (float?)layerToken["XOffset"] ?? 0;
+                    layer.YOffset = (float?)layerToken["YOffset"] ?? 0;
+                    layer.HSpeed = (float?)layerToken["HSpeed"] ?? 0;
+                    layer.VSpeed = (float?)layerToken["VSpeed"] ?? 0;
+                    layer.IsVisible = (bool?)layerToken["IsVisible"] ?? true;
+                    layer.EffectEnabled = (bool?)layerToken["EffectEnabled"] ?? false;
+                    layer.EffectType = (layerToken["EffectType"] != null && layerToken["EffectType"].Type != JTokenType.Null)
+                        ? Data.Strings.MakeString((string)layerToken["EffectType"]) : null;
+
+                    layer.EffectProperties.Clear();
+                    JArray effectPropsArr = layerToken["EffectProperties"] as JArray;
+                    if (effectPropsArr != null)
+                    {
+                        foreach (JToken propToken in effectPropsArr)
+                        {
+                            var prop = new UndertaleRoom.EffectProperty();
+                            prop.Name = Data.Strings.MakeString((string)propToken["Name"]);
+                            prop.Value = Data.Strings.MakeString((string)propToken["Value"]);
+                            layer.EffectProperties.Add(prop);
+                        }
+                    }
+
+                    JToken instDataToken = layerToken["InstancesData"];
+                    if (instDataToken != null)
+                    {
+                        var instData = new UndertaleRoom.Layer.LayerInstancesData();
+                        JArray instIdsArr = instDataToken["InstanceIds"] as JArray;
+                        if (instIdsArr != null)
+                        {
+                            var instanceIds = new List<uint>();
+                            foreach (var idToken in instIdsArr)
+                                instanceIds.Add((uint)idToken);
+
+                            instData.InstanceIds = instanceIds.ToArray();
+                            instData.Instances.Clear();
+                            foreach (uint instId in instanceIds)
+                            {
+                                var roomObj = room.GameObjects.FirstOrDefault(g => g.InstanceID == instId);
+                                if (roomObj != null)
+                                    instData.Instances.Add(roomObj);
+                            }
+                        }
+                        layer.Data = instData;
+                    }
+
+                    JToken tilesDataToken = layerToken["TilesData"];
+                    if (tilesDataToken != null)
+                    {
+                        var tilesData = new UndertaleRoom.Layer.LayerTilesData();
+                        tilesData.ParentLayer = layer;
+                        string tilesBgName = (string)tilesDataToken["Background"];
+                        tilesData.Background = !string.IsNullOrEmpty(tilesBgName) ? Data.Backgrounds.ByName(tilesBgName) : null;
+                        tilesData.TilesX = (uint?)tilesDataToken["TilesX"] ?? 0;
+                        tilesData.TilesY = (uint?)tilesDataToken["TilesY"] ?? 0;
+
+                        JArray tileDataArr = tilesDataToken["TileData"] as JArray;
+                        if (tileDataArr != null)
+                        {
+                            uint[][] tileData = new uint[tilesData.TilesY][];
+                            for (int y = 0; y < tilesData.TilesY; y++)
+                            {
+                                tileData[y] = new uint[tilesData.TilesX];
+                                if (y < tileDataArr.Count)
+                                {
+                                    JArray rowArr = tileDataArr[y] as JArray;
+                                    if (rowArr != null)
+                                    {
+                                        for (int x = 0; x < Math.Min(tilesData.TilesX, (uint)rowArr.Count); x++)
+                                            tileData[y][x] = (uint)rowArr[x];
+                                    }
+                                }
+                            }
+                            tilesData.TileData = tileData;
+                        }
+                        layer.Data = tilesData;
+                    }
+
+                    JToken bgDataToken = layerToken["BackgroundData"];
+                    if (bgDataToken != null)
+                    {
+                        var bgData = new UndertaleRoom.Layer.LayerBackgroundData();
+                        bgData.ParentLayer = layer;
+                        bgData.Visible = (bool?)bgDataToken["Visible"] ?? true;
+                        bgData.Foreground = (bool?)bgDataToken["Foreground"] ?? false;
+                        string bgSpriteName = (string)bgDataToken["Sprite"];
+                        bgData.Sprite = !string.IsNullOrEmpty(bgSpriteName) ? Data.Sprites.ByName(bgSpriteName) : null;
+                        bgData.TiledHorizontally = (bool?)bgDataToken["TiledHorizontally"] ?? false;
+                        bgData.TiledVertically = (bool?)bgDataToken["TiledVertically"] ?? false;
+                        bgData.Stretch = (bool?)bgDataToken["Stretch"] ?? false;
+                        bgData.Color = (uint?)bgDataToken["Color"] ?? 0xFF000000;
+                        bgData.FirstFrame = (float?)bgDataToken["FirstFrame"] ?? 0;
+                        bgData.AnimationSpeed = (float?)bgDataToken["AnimationSpeed"] ?? 0;
+                        bgData.AnimationSpeedType = (AnimSpeedType)((int?)bgDataToken["AnimationSpeedType"] ?? 0);
+                        layer.Data = bgData;
+                    }
+
+                    JToken assetsDataToken = layerToken["AssetsData"];
+                    if (assetsDataToken != null)
+                    {
+                        var assetsData = new UndertaleRoom.Layer.LayerAssetsData();
+
+                        assetsData.LegacyTiles = new UndertalePointerList<UndertaleRoom.Tile>();
+                        JArray legacyTilesArr = assetsDataToken["LegacyTiles"] as JArray;
+                        if (legacyTilesArr != null)
+                        {
+                            foreach (JToken ltToken in legacyTilesArr)
+                            {
+                                var lt = new UndertaleRoom.Tile();
+                                lt.X = (int?)ltToken["X"] ?? 0;
+                                lt.Y = (int?)ltToken["Y"] ?? 0;
+                                lt.spriteMode = (bool?)ltToken["SpriteMode"] ?? false;
+                                if (lt.spriteMode)
+                                {
+                                    string ltSprName = (string)ltToken["SpriteDefinition"];
+                                    lt.SpriteDefinition = !string.IsNullOrEmpty(ltSprName) ? Data.Sprites.ByName(ltSprName) : null;
+                                }
+                                else
+                                {
+                                    string ltBgName = (string)ltToken["BackgroundDefinition"];
+                                    lt.BackgroundDefinition = !string.IsNullOrEmpty(ltBgName) ? Data.Backgrounds.ByName(ltBgName) : null;
+                                }
+                                lt.SourceX = (int?)ltToken["SourceX"] ?? 0;
+                                lt.SourceY = (int?)ltToken["SourceY"] ?? 0;
+                                lt.Width = (uint?)ltToken["Width"] ?? 0;
+                                lt.Height = (uint?)ltToken["Height"] ?? 0;
+                                lt.TileDepth = (int?)ltToken["TileDepth"] ?? 0;
+                                lt.InstanceID = (uint?)ltToken["InstanceID"] ?? 0;
+                                lt.ScaleX = (float?)ltToken["ScaleX"] ?? 1;
+                                lt.ScaleY = (float?)ltToken["ScaleY"] ?? 1;
+                                lt.Color = (uint?)ltToken["Color"] ?? 0xFFFFFFFF;
+                                assetsData.LegacyTiles.Add(lt);
+                            }
+                        }
+
+                        assetsData.Sprites = new UndertalePointerList<UndertaleRoom.SpriteInstance>();
+                        JArray sprInstArr = assetsDataToken["Sprites"] as JArray;
+                        if (sprInstArr != null)
+                        {
+                            foreach (JToken siToken in sprInstArr)
+                            {
+                                var si = new UndertaleRoom.SpriteInstance();
+                                si.Name = Data.Strings.MakeString((string)siToken["Name"]);
+                                string siSprName = (string)siToken["Sprite"];
+                                si.Sprite = !string.IsNullOrEmpty(siSprName) ? Data.Sprites.ByName(siSprName) : null;
+                                si.X = (int?)siToken["X"] ?? 0;
+                                si.Y = (int?)siToken["Y"] ?? 0;
+                                si.ScaleX = (float?)siToken["ScaleX"] ?? 1;
+                                si.ScaleY = (float?)siToken["ScaleY"] ?? 1;
+                                si.Color = (uint?)siToken["Color"] ?? 0xFFFFFFFF;
+                                si.AnimationSpeed = (float?)siToken["AnimationSpeed"] ?? 0;
+                                si.AnimationSpeedType = (AnimSpeedType)((int?)siToken["AnimationSpeedType"] ?? 0);
+                                si.FrameIndex = (float?)siToken["FrameIndex"] ?? 0;
+                                si.Rotation = (float?)siToken["Rotation"] ?? 0;
+                                assetsData.Sprites.Add(si);
+                            }
+                        }
+
+                        assetsData.Sequences = new UndertalePointerList<UndertaleRoom.SequenceInstance>();
+                        JArray seqInstArr = assetsDataToken["Sequences"] as JArray;
+                        if (seqInstArr != null)
+                        {
+                            foreach (JToken seqiToken in seqInstArr)
+                            {
+                                var seqi = new UndertaleRoom.SequenceInstance();
+                                seqi.Name = Data.Strings.MakeString((string)seqiToken["Name"]);
+                                string seqResName = (string)seqiToken["Sequence"];
+                                seqi.Sequence = !string.IsNullOrEmpty(seqResName) ? Data.Sequences.ByName(seqResName) : null;
+                                seqi.X = (int?)seqiToken["X"] ?? 0;
+                                seqi.Y = (int?)seqiToken["Y"] ?? 0;
+                                seqi.ScaleX = (float?)seqiToken["ScaleX"] ?? 1;
+                                seqi.ScaleY = (float?)seqiToken["ScaleY"] ?? 1;
+                                seqi.Color = (uint?)seqiToken["Color"] ?? 0xFFFFFFFF;
+                                seqi.AnimationSpeed = (float?)seqiToken["AnimationSpeed"] ?? 0;
+                                seqi.AnimationSpeedType = (AnimSpeedType)((int?)seqiToken["AnimationSpeedType"] ?? 0);
+                                seqi.FrameIndex = (float?)seqiToken["FrameIndex"] ?? 0;
+                                seqi.Rotation = (float?)seqiToken["Rotation"] ?? 0;
+                                assetsData.Sequences.Add(seqi);
+                            }
+                        }
+
+                        layer.Data = assetsData;
+                    }
+
+                    JToken effectDataToken = layerToken["EffectData"];
+                    if (effectDataToken != null && layer.LayerType == UndertaleRoom.LayerType.Effect)
+                    {
+                        var effectData = new UndertaleRoom.Layer.LayerEffectData();
+                        effectData.EffectType = (effectDataToken["EffectType"] != null && effectDataToken["EffectType"].Type != JTokenType.Null)
+                            ? Data.Strings.MakeString((string)effectDataToken["EffectType"]) : null;
+                        layer.Data = effectData;
+                    }
+
+                    room.Layers.Add(layer);
+                }
+            }
+
+            room.Sequences.Clear();
+            JArray seqArray = roomJson["Sequences"] as JArray;
+            if (seqArray != null)
+            {
+                foreach (JToken seqToken in seqArray)
+                {
+                    string seqName = (string)seqToken;
+                    if (!string.IsNullOrEmpty(seqName))
+                    {
+                        var seq = Data.Sequences.ByName(seqName);
+                        if (seq != null)
+                        {
+                            var seqRef = new UndertaleResourceById<UndertaleSequence, UndertaleChunkSEQN>();
+                            seqRef.Resource = seq;
+                            room.Sequences.Add(seqRef);
+                        }
+                    }
+                }
+            }
+
+            Console.WriteLine($"[UTMT-IMPORT] Imported room: {roomName}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[UTMT-IMPORT] Error importing room from '{roomDirPath}': {ex.Message}");
+        }
+    }
+}
+
 /* CODE */
 Console.WriteLine($"[UTMT-IMPORT] Phase: Code");
 string codeDir = GetFolderCI(repoDir, "code");

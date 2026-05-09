@@ -38,7 +38,7 @@ export class AssetTreeProvider implements vscode.TreeDataProvider<AssetTreeItem>
             return cached;
         }
 
-        const types: AssetType[] = ['code', 'sprites', 'sounds', 'objects', 'backgrounds', 'fonts'];
+        const types: AssetType[] = ['code', 'sprites', 'sounds', 'objects', 'backgrounds', 'fonts', 'rooms'];
         for (const type of types) {
             const dir = this.projectService.getAssetDir(type);
             if (!dir || !fs.existsSync(dir)) { continue; }
@@ -102,7 +102,7 @@ export class AssetTreeProvider implements vscode.TreeDataProvider<AssetTreeItem>
             children = this.getRootItems();
         } else if (element.contextValue?.startsWith('assetType')) {
             children = this.getAssetTypeItems(element.metadata?.type as AssetType, element.filePath!);
-        } else if (element.contextValue === 'assetFolder' || element.contextValue === 'asset-sprite-dir' || element.contextValue === 'asset-sound-dir') {
+        } else if (element.contextValue === 'assetFolder' || element.contextValue === 'asset-sprite-dir' || element.contextValue === 'asset-sound-dir' || element.contextValue === 'asset-room-dir') {
             children = this.getFolderItems(element.filePath!);
         } else {
             children = [];
@@ -127,7 +127,7 @@ export class AssetTreeProvider implements vscode.TreeDataProvider<AssetTreeItem>
     }
 
     private getRootItems(): AssetTreeItem[] {
-        const types: AssetType[] = ['code', 'sprites', 'sounds', 'objects', 'backgrounds', 'fonts'];
+        const types: AssetType[] = ['code', 'sprites', 'sounds', 'objects', 'backgrounds', 'fonts', 'rooms'];
         const items: AssetTreeItem[] = [];
 
         const filter = this.getFilter();
@@ -198,6 +198,7 @@ export class AssetTreeProvider implements vscode.TreeDataProvider<AssetTreeItem>
             case 'objects': return new vscode.ThemeIcon('symbol-class');
             case 'backgrounds': return new vscode.ThemeIcon('symbol-file');
             case 'fonts': return new vscode.ThemeIcon('symbol-font');
+            case 'rooms': return new vscode.ThemeIcon('symbol-structure');
             default: return new vscode.ThemeIcon('folder');
         }
     }
@@ -214,6 +215,10 @@ export class AssetTreeProvider implements vscode.TreeDataProvider<AssetTreeItem>
 
             if (type === 'objects') {
                 return this.getObjectItems(dir);
+            }
+
+            if (type === 'rooms') {
+                return this.getRoomItems(dir);
             }
 
             return this.getContainerItems(dir, type);
@@ -298,6 +303,59 @@ export class AssetTreeProvider implements vscode.TreeDataProvider<AssetTreeItem>
                     subPath
                 );
                 item.iconPath = new vscode.ThemeIcon('folder');
+                items.push(item);
+            }
+        }
+
+        return this.sortItems(items);
+    }
+
+    private getRoomItems(dir: string): AssetTreeItem[] {
+        const items: AssetTreeItem[] = [];
+        const filter = this.getFilter();
+
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            if (entry.name === '.gitkeep') { continue; }
+            if (filter && !filter.test(entry.name)) { continue; }
+
+            const fullPath = path.join(dir, entry.name);
+
+            if (entry.isDirectory()) {
+                const hasMetadata = fs.existsSync(path.join(fullPath, 'metadata.json'));
+                if (hasMetadata) {
+                    const item = new AssetTreeItem(
+                        entry.name,
+                        vscode.TreeItemCollapsibleState.Collapsed,
+                        'asset-room-dir',
+                        fullPath
+                    );
+                    item.iconPath = new vscode.ThemeIcon('symbol-structure');
+                    item.description = '房间';
+                    items.push(item);
+                } else {
+                    if (filter && !this.hasMatchingAssets(fullPath, filter, 'rooms')) { continue; }
+                    const fileCount = this.countFilesRecursive(fullPath);
+                    const showCount = utmtConfig.treeShowFileCount;
+                    const label = showCount ? `${entry.name} (${fileCount})` : entry.name;
+                    const item = new AssetTreeItem(
+                        label,
+                        vscode.TreeItemCollapsibleState.Collapsed,
+                        'assetFolder',
+                        fullPath
+                    );
+                    item.iconPath = new vscode.ThemeIcon('folder');
+                    items.push(item);
+                }
+            } else if (entry.isFile() && entry.name.endsWith('.json')) {
+                const item = new AssetTreeItem(entry.name, vscode.TreeItemCollapsibleState.None, 'asset-room-json', fullPath);
+                item.iconPath = new vscode.ThemeIcon('json');
+                item.command = {
+                    command: 'vscode-utmt-git.openAsset',
+                    title: 'Open',
+                    arguments: [item],
+                };
+                item.resourceUri = vscode.Uri.file(fullPath);
                 items.push(item);
             }
         }
@@ -459,8 +517,8 @@ export class AssetTreeProvider implements vscode.TreeDataProvider<AssetTreeItem>
 
     private sortItems(items: AssetTreeItem[]): AssetTreeItem[] {
         return items.sort((a, b) => {
-            const aIsDir = a.contextValue === 'assetFolder' || a.contextValue === 'asset-sprite-dir' || a.contextValue === 'asset-sound-dir' ? 0 : 1;
-            const bIsDir = b.contextValue === 'assetFolder' || b.contextValue === 'asset-sprite-dir' || b.contextValue === 'asset-sound-dir' ? 0 : 1;
+            const aIsDir = a.contextValue === 'assetFolder' || a.contextValue === 'asset-sprite-dir' || a.contextValue === 'asset-sound-dir' || a.contextValue === 'asset-room-dir' ? 0 : 1;
+            const bIsDir = b.contextValue === 'assetFolder' || b.contextValue === 'asset-sprite-dir' || b.contextValue === 'asset-sound-dir' || b.contextValue === 'asset-room-dir' ? 0 : 1;
             if (aIsDir !== bIsDir) { return aIsDir - bIsDir; }
             return String(a.label).localeCompare(String(b.label));
         });
