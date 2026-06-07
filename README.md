@@ -1,5 +1,7 @@
 # UTMT Git
 
+**现在更推荐使用[我修改的新版本UndertaleModTool](https://github.com/genouka/undertalemodtool)，本项目不再积极维护**
+
 将 UndertaleModTool 与 Git 集成，提供游戏资产管理、导入导出和版本控制工具。
 
 ## 功能
